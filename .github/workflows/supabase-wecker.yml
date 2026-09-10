@@ -1,0 +1,32 @@
+# Hält das Supabase-Free-Projekt wach: alle 2 Tage eine kleine Leseanfrage,
+# damit es nicht nach 7 Tagen ohne Zugriff pausiert wird.
+# Schreibt zusätzlich sein Laufdatum ins Repo, damit GitHub den Zeitplan
+# nicht wegen 60 Tagen Inaktivität abschaltet. Läuft ohne manuelles Eingreifen.
+name: Supabase Wecker
+on:
+  schedule:
+    - cron: "17 6 */2 * *"   # alle 2 Tage um 06:17 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Datenbank anfragen
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: sb_publishable_b9EbsvwSs8HPvnBw4_KvTw_cJ_CM3FK" \
+            -H "Authorization: Bearer sb_publishable_b9EbsvwSs8HPvnBw4_KvTw_cJ_CM3FK" \
+            "https://zsscsphixrupplaihhxo.supabase.co/rest/v1/orders?select=id&limit=1")
+          echo "Antwort: $code"
+          test "$code" = "200"
+      - name: Laufdatum eintragen (hält den Zeitplan aktiv)
+        run: |
+          date -u +"%Y-%m-%d %H:%M UTC – Datenbank erreichbar" > .github/wecker-letzter-lauf.txt
+          git config user.name "fcwb-wecker"
+          git config user.email "wecker@users.noreply.github.com"
+          git add .github/wecker-letzter-lauf.txt
+          git commit -m "Wecker: Datenbank angefragt" || exit 0
+          git push
