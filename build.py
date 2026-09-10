@@ -23,6 +23,7 @@ out=patches.tracking2(out)
 out=patches.statuslabel(out)
 out=patches.no_excel_pdf(out)
 out=patches.no_phones(out)
+out=patches.status_modal(out)
 out=out.replace('</head>',adapter+'\n'+design+'\n</head>',1)
 # Login-Seite (Passwort nur als SHA-256-Pruefsumme im Code)
 import base64,hashlib

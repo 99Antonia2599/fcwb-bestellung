@@ -138,3 +138,10 @@ def no_phones(html):
     assert not re.search(r'417\d{8}',html), 'Nummer noch im Code'
     html=html.replace('"Geht an den Besteller sowie immer an Roberto und Erol. Pro Empf\xE4nger einen Button antippen."','"WhatsApp \xF6ffnen, Chat oder Gruppe w\xE4hlen und senden \u2013 der Text ist vorausgef\xFCllt."')
     return html
+
+def status_modal(html):
+    """Status melden: Hinweistext + allgemeiner WhatsApp-Knopf statt Nummern-Knoepfe."""
+    html=rep1(html,'"Geht an den Besteller sowie immer an Roberto und Erol. Pro Empf\xE4nger einen Button antippen."','"WhatsApp \xF6ffnen, Chat oder Gruppe w\xE4hlen und senden \u2013 der Text ist vorausgef\xFCllt."','status-hint')
+    html=rep1(html,'Xg(d.besteller).map(K=>v.default.createElement("a",{key:K,href:zg(K,w),target:"_blank",rel:"noopener noreferrer",style:{textDecoration:"none",background:"#25D366",color:"#fff",borderRadius:8,fontWeight:800,padding:"10px 14px",fontSize:13}},"An ",K)),',
+        'v.default.createElement("a",{href:"https://wa.me/?text="+encodeURIComponent(w),target:"_blank",rel:"noopener noreferrer",style:{textDecoration:"none",background:"#25D366",color:"#fff",borderRadius:999,fontWeight:800,padding:"10px 14px",fontSize:13}},"WhatsApp \xF6ffnen"),','status-btn')
+    return html
