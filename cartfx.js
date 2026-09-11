@@ -3,6 +3,7 @@
   background:#1E8E3E;color:#fff;border-radius:999px;padding:12px 22px;font:800 15px Inter,system-ui,sans-serif;box-shadow:0 16px 34px -12px rgba(0,0,0,.6);display:flex;align-items:center;gap:10px}
 #fcwb-cartfx.show{animation:cfx 1.8s cubic-bezier(.2,.9,.3,1.2) forwards}
 @keyframes cfx{0%{opacity:0;transform:translateX(-50%) translateY(-24px) scale(.8)}15%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.05)}25%{transform:translateX(-50%) translateY(0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-12px)}}
+#fcwb-cartbox{cursor:default}
 .fcwb-cart-pulse{animation:cartPulse .8s cubic-bezier(.2,.9,.3,1.2) 2}
 @keyframes cartPulse{0%,100%{transform:scale(1)}35%{transform:scale(1.22) rotate(-6deg)}70%{transform:scale(1.05) rotate(3deg)}}
 </style>
@@ -22,10 +23,10 @@
     var n=parseInt(el.textContent||"0",10)||0;
     if(n>last) window.FCWB_CARTFX(n-last);
     last=n;
-    var box=document.getElementById("fcwb-cartbox");
-    if(box){
-      if(n>0){box.style.background="#1E8E3E";box.style.borderColor="#7BE0A0";box.style.color="#fff";}
-      else {box.style.background="rgba(255,255,255,.18)";box.style.borderColor="rgba(255,255,255,.5)";box.style.color="#fff";}
+    var box=document.getElementById("fcwb-cartbox"), cnt=document.getElementById("fcwb-cartcount");
+    if(box&&cnt){
+      if(n>0){box.style.background="#FFC300";box.style.color="#0B2A5B";cnt.style.background="#0B2A5B";cnt.style.color="#fff";}
+      else {box.style.background="#fff";box.style.color="#0B2A5B";cnt.style.background="#EEF3FA";cnt.style.color="#5B6B7B";}
     }
   },250);
 })();

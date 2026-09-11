@@ -180,12 +180,19 @@ def mail_popup(html):
     return html
 
 def cart_icon(html):
-    """Warenkorb-Symbol oben rechts, immer sichtbar."""
-    html=rep1(html,'v.default.createElement(g,{id:"teams",label:"Teams"})',
-      'v.default.createElement(g,{id:"teams",label:"Teams"}),v.default.createElement("div",{style:{marginLeft:"auto",display:"flex",alignItems:"center",paddingRight:12}},'
-      'v.default.createElement("span",{title:"Warenkorb",style:{display:"inline-flex",alignItems:"center",gap:6,color:"#fff",fontWeight:800,fontSize:13}},"\U0001F6D2",'
-      'v.default.createElement("span",{id:"fcwb-cartcount",style:{minWidth:30,textAlign:"center",background:"#fff",color:"#0B2A5B",borderRadius:999,padding:"3px 11px",fontSize:17,fontWeight:900}},"0")))',
-      'cart-icon')
+    """Warenkorb oben rechts: weisse Pille mit eigenem SVG-Symbol und Zaehler."""
+    svg=('v.default.createElement("svg",{viewBox:"0 0 24 24",width:24,height:24,fill:"none",stroke:"currentColor","stroke-width":"2.2","stroke-linecap":"round","stroke-linejoin":"round",style:{display:"block"}},'
+         'v.default.createElement("path",{key:"p",d:"M2.5 3h2.2l2.2 11.2a1.8 1.8 0 0 0 1.8 1.4h8.3a1.8 1.8 0 0 0 1.8-1.4L21 7H6"}),'
+         'v.default.createElement("circle",{key:"c1",cx:"9.5",cy:"20",r:"1.6",fill:"currentColor",stroke:"none"}),'
+         'v.default.createElement("circle",{key:"c2",cx:"17.5",cy:"20",r:"1.6",fill:"currentColor",stroke:"none"}))')
+    pill=('v.default.createElement("div",{style:{marginLeft:"auto",display:"flex",alignItems:"center",paddingRight:12}},'
+          'v.default.createElement("span",{id:"fcwb-cartbox",title:"Warenkorb",style:{display:"inline-flex",alignItems:"center",gap:9,background:"#fff",'
+          'borderRadius:999,padding:"7px 14px 7px 13px",color:"#0B2A5B",fontWeight:900,lineHeight:1,'
+          'boxShadow:"0 4px 14px -4px rgba(0,0,0,.5)",transition:"background .25s,color .25s,transform .2s"}},'
+          +svg+','
+          'v.default.createElement("span",{id:"fcwb-cartcount",style:{minWidth:26,textAlign:"center",background:"#EEF3FA",color:"#5B6B7B",'
+          'borderRadius:999,padding:"3px 10px",fontSize:16,fontWeight:900,transition:"background .25s,color .25s"}},"0")))')
+    html=rep1(html,'v.default.createElement(g,{id:"teams",label:"Teams"})','v.default.createElement(g,{id:"teams",label:"Teams"}),'+pill,'cart-icon')
     html=rep1(html,'Q=f.reduce((b,Y)=>b+Y.qty,0),','Q=f.reduce((b,Y)=>b+Y.qty,0),ZZ=(()=>{let el=typeof document<"u"&&document.getElementById("fcwb-cartcount");if(el)el.textContent=String(Q);return 0})(),','cart-count')
     return html
 
