@@ -162,21 +162,21 @@ def order_flow(html):
          r'v.default.createElement(uy,{stage:F.stage,druck:F.druck,onSet:y=>h(d.id,k,y)}))')
     html=rep1(html,old,new,'qty-cell')
     html=rep1(html,'p=(d,w)=>r(e.map(K=>K.id===d?{...K,archived:w}:K)),m=d=>r(e.filter(w=>w.id!==d)),',
-      'p=(d,w)=>r(e.map(K=>K.id===d?{...K,archived:w}:K)),m=d=>{if(!confirm("Ganze Bestellung stornieren? Die Shopkontakte werden per E-Mail informiert."))return;r(e.filter(w=>w.id!==d));MAILINFO("Stornierung gesendet")},',
+      'p=(d,w)=>r(e.map(K=>K.id===d?{...K,archived:w}:K)),m=d=>{if(!confirm("Ganze Bestellung stornieren? Die Shopkontakte werden per E-Mail informiert."))return;r(e.filter(w=>w.id!==d));MAILINFO("Stornierung gesendet",!0)},',
       'del-confirm')
     html=rep1(html,'let[t,n]=(0,v.useState)(null),[a,i]=(0,v.useState)("offen"),',
       'let QTY=(id,idx,q)=>{let O=e.find(z=>z.id===id);if(!O)return;let it=O.items[idx];'
       'if(q<=0&&!confirm("Position stornieren: "+it.name+"? Die Shopkontakte werden per E-Mail informiert."))return;'
       'let ni=q<=0?O.items.filter((z,j)=>j!==idx):O.items.map((z,j)=>j===idx?{...z,qty:q}:z);'
-      'if(!ni.length){if(!confirm("Das war die letzte Position. Ganze Bestellung stornieren?"))return;r(e.filter(z=>z.id!==id));MAILINFO("Stornierung gesendet");return}'
-      'r(e.map(z=>z.id===id?{...z,items:ni}:z));MAILINFO(q>it.qty?"Mengenerh\xF6hung gesendet":"Stornierung gesendet")};'
+      'if(!ni.length){if(!confirm("Das war die letzte Position. Ganze Bestellung stornieren?"))return;r(e.filter(z=>z.id!==id));MAILINFO("Stornierung gesendet",!0);return}'
+      'r(e.map(z=>z.id===id?{...z,items:ni}:z));MAILINFO(q>it.qty?"Mengenerh\xF6hung gesendet":"Stornierung gesendet",!0)};'
       'let[t,n]=(0,v.useState)(null),[a,i]=(0,v.useState)("offen"),','qty-fn')
     return html
 
 def mail_popup(html):
     """Popup 'E-Mail wurde gesendet'."""
-    html=rep1(html,'var Og={width:42,height:42','window.MAILINFO=function(t){window.FCWB_MAILINFO&&window.FCWB_MAILINFO(t)};var Og={width:42,height:42','mailinfo-global')
-    html=rep1(html,'n([oe,...t||[]]),i(b||""),h([]),g(!1),w(oe)','n([oe,...t||[]]),i(b||""),h([]),g(!1),w(oe),window.MAILINFO&&window.MAILINFO("Bestellung ausgel\xF6st")','mailinfo-order')
+    html=rep1(html,'var Og={width:42,height:42','window.MAILINFO=function(t,tel){window.FCWB_MAILINFO&&window.FCWB_MAILINFO(t,tel)};var Og={width:42,height:42','mailinfo-global')
+    html=rep1(html,'n([oe,...t||[]]),i(b||""),h([]),g(!1),w(oe)','n([oe,...t||[]]),i(b||""),h([]),g(!1),w(oe),window.MAILINFO&&window.MAILINFO("Bestellung ausgel\xF6st",!1)','mailinfo-order')
     return html
 
 def cart_icon(html):
@@ -184,7 +184,15 @@ def cart_icon(html):
     html=rep1(html,'v.default.createElement(g,{id:"teams",label:"Teams"})',
       'v.default.createElement(g,{id:"teams",label:"Teams"}),v.default.createElement("div",{style:{marginLeft:"auto",display:"flex",alignItems:"center",paddingRight:12}},'
       'v.default.createElement("span",{title:"Warenkorb",style:{display:"inline-flex",alignItems:"center",gap:6,color:"#fff",fontWeight:800,fontSize:13}},"\U0001F6D2",'
-      'v.default.createElement("span",{id:"fcwb-cartcount",style:{minWidth:26,textAlign:"center",background:"#FFC300",color:"#0B2A5B",borderRadius:999,padding:"2px 9px",fontSize:15,fontWeight:900}},"0")))',
+      'v.default.createElement("span",{id:"fcwb-cartcount",style:{minWidth:28,textAlign:"center",background:"#0B2A5B",color:"#fff",borderRadius:999,padding:"3px 10px",fontSize:16,fontWeight:900}},"0")))',
       'cart-icon')
     html=rep1(html,'Q=f.reduce((b,Y)=>b+Y.qty,0),','Q=f.reduce((b,Y)=>b+Y.qty,0),ZZ=(()=>{let el=typeof document<"u"&&document.getElementById("fcwb-cartcount");if(el)el.textContent=String(Q);return 0})(),','cart-count')
+    return html
+
+def auto_archive(html):
+    """Bestellung automatisch ins Archiv, sobald alle Positionen uebergeben sind (mit Popup)."""
+    html=rep1(html,'h=(d,w,K)=>r(AR(e.map(S=>S.id===d?{...S,items:S.items.map((F,k)=>k===w?{...F,stage:K}:F)}:S),d)),',
+      'h=(d,w,K)=>r(AR2(e.map(S=>S.id===d?{...S,items:S.items.map((F,k)=>k===w?{...F,stage:K}:F)}:S),d)),','auto-arch-h')
+    html=rep1(html,'AR=(L,id)=>L.map(S=>S.id!==id||S.archived||!S.items.every(F=>F.stage===5)?S:(confirm("Alle Positionen sind \xFCbergeben. Bestellung jetzt ins Archiv verschieben?")?{...S,archived:!0}:S)),',
+      'AR2=(L,id)=>L.map(S=>{if(S.id!==id||S.archived||!S.items.every(F=>F.stage===5))return S;setTimeout(()=>window.FCWB_ARCHIVED&&window.FCWB_ARCHIVED(S.besteller,S.empfaenger),200);return{...S,archived:!0}}),','auto-arch-fn')
     return html

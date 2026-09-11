@@ -23,7 +23,16 @@
   var el=document.getElementById("fcwb-mailinfo");
   document.getElementById("fcwb-mailinfo-ok").onclick=function(){el.classList.remove("show")};
   el.onclick=function(e){if(e.target===el)el.classList.remove("show")};
-  window.FCWB_MAILINFO=function(t){
+  window.FCWB_ARCHIVED=function(bes,emp){
+    document.getElementById("fcwb-mailinfo-title").textContent="Bestellung abgeschlossen";
+    document.getElementById("fcwb-mailinfo-text").textContent="Alle Positionen sind übergeben. Die Bestellung von "+(bes||"")+(emp?" an "+emp:"")+" wurde ins Archiv verschoben.";
+    el.querySelector(".tel").style.display="none";
+    el.querySelector(".ico").textContent="🏆";
+    el.classList.add("show");
+  };
+  window.FCWB_MAILINFO=function(t,withTel){
+    el.querySelector(".tel").style.display=withTel?"":"none";
+    el.querySelector(".ico").textContent="✉";
     document.getElementById("fcwb-mailinfo-title").textContent=t||"E-Mail wurde gesendet";
     document.getElementById("fcwb-mailinfo-text").textContent="Die Shopkontakte wurden automatisch per E-Mail informiert.";
     el.classList.add("show");
