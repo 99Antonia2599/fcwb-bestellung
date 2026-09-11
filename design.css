@@ -61,6 +61,10 @@ html{overflow-x:hidden;}
 #root > div > div:nth-child(2) span[title="Warenkorb"]{transition:background .2s,transform .2s}
 #root > div > div:nth-child(2) span[title="Warenkorb"]:hover{background:rgba(255,255,255,.25) !important;transform:scale(1.04)}
 @media (max-width:520px){#root > div > div:nth-child(2) span[title="Warenkorb"]{padding:5px 10px !important;font-size:18px !important}}
+/* Verfolgung: Luft zwischen Mengenzeile und Statusleiste */
+#root table td[style*="white-space: nowrap"]{line-height:1.9}
+#root table td[style*="white-space: nowrap"] > div[style*="flex-end"]{margin-top:6px}
+#root table tr{vertical-align:top}
 ::selection{background:var(--fc-gold);color:var(--fc-navy);}
 @media (max-width:700px){
   /* Teams: Raster untereinander, Teamliste als horizontale Chips, Tabelle scrollt in der Karte */
