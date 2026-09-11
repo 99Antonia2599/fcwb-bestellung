@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
         </table>
         <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#5B6B7B;margin-top:8px">Unten der aktuelle Stand der gesamten Bestellung${payload.type === "DELETE" ? " vor der Löschung" : ""}.</div>
       </td></tr>` : ""}
-      ${changes.length ? `<tr><td style="padding:0 24px 12px"><div style="background:#FFF6D6;border:1px solid #FFC300;padding:10px 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#0F1E33"><b>Bitte zusätzlich telefonisch bei 11teamsports melden: 044 362 05 55</b></div></td></tr>` : ""}
+      ${changes.some((c) => c.newQty < c.oldQty) ? `<tr><td style="padding:0 24px 12px"><div style="background:#FFF6D6;border:1px solid #FFC300;padding:10px 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#0F1E33"><b>Bitte zusätzlich telefonisch bei 11teamsports melden: 044 362 05 55</b></div></td></tr>` : ""}
       <tr><td style="padding:8px 24px 20px">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
           <tr>

@@ -169,7 +169,7 @@ def order_flow(html):
       'if(q<=0&&!confirm("Position stornieren: "+it.name+"? Die Shopkontakte werden per E-Mail informiert."))return;'
       'let ni=q<=0?O.items.filter((z,j)=>j!==idx):O.items.map((z,j)=>j===idx?{...z,qty:q}:z);'
       'if(!ni.length){if(!confirm("Das war die letzte Position. Ganze Bestellung stornieren?"))return;r(e.filter(z=>z.id!==id));MAILINFO("Stornierung gesendet",!0);return}'
-      'r(e.map(z=>z.id===id?{...z,items:ni}:z));MAILINFO(q>it.qty?"Mengenerh\xF6hung gesendet":"Stornierung gesendet",!0)};'
+      'r(e.map(z=>z.id===id?{...z,items:ni}:z));MAILINFO(q>it.qty?"Mengenerh\xF6hung gesendet":"Stornierung gesendet",q<=it.qty)};'
       'let[t,n]=(0,v.useState)(null),[a,i]=(0,v.useState)("offen"),','qty-fn')
     return html
 
