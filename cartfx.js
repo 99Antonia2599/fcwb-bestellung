@@ -22,6 +22,11 @@
     var n=parseInt(el.textContent||"0",10)||0;
     if(n>last) window.FCWB_CARTFX(n-last);
     last=n;
+    var box=document.getElementById("fcwb-cartbox");
+    if(box){
+      if(n>0){box.style.background="#1E8E3E";box.style.borderColor="#7BE0A0";box.style.color="#fff";}
+      else {box.style.background="rgba(255,255,255,.18)";box.style.borderColor="rgba(255,255,255,.5)";box.style.color="#fff";}
+    }
   },250);
 })();
 </script>

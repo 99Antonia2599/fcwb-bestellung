@@ -184,7 +184,7 @@ def cart_icon(html):
     html=rep1(html,'v.default.createElement(g,{id:"teams",label:"Teams"})',
       'v.default.createElement(g,{id:"teams",label:"Teams"}),v.default.createElement("div",{style:{marginLeft:"auto",display:"flex",alignItems:"center",paddingRight:12}},'
       'v.default.createElement("span",{title:"Warenkorb",style:{display:"inline-flex",alignItems:"center",gap:6,color:"#fff",fontWeight:800,fontSize:13}},"\U0001F6D2",'
-      'v.default.createElement("span",{id:"fcwb-cartcount",style:{minWidth:28,textAlign:"center",background:"#0B2A5B",color:"#fff",borderRadius:999,padding:"3px 10px",fontSize:16,fontWeight:900}},"0")))',
+      'v.default.createElement("span",{id:"fcwb-cartcount",style:{minWidth:30,textAlign:"center",background:"#fff",color:"#0B2A5B",borderRadius:999,padding:"3px 11px",fontSize:17,fontWeight:900}},"0")))',
       'cart-icon')
     html=rep1(html,'Q=f.reduce((b,Y)=>b+Y.qty,0),','Q=f.reduce((b,Y)=>b+Y.qty,0),ZZ=(()=>{let el=typeof document<"u"&&document.getElementById("fcwb-cartcount");if(el)el.textContent=String(Q);return 0})(),','cart-count')
     return html

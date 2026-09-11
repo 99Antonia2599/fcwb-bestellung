@@ -30,6 +30,13 @@ Deno.serve(async (req) => {
     const o = payload.type === "DELETE" ? payload.old_record?.data : payload.record?.data;
     if (!o || !Array.isArray(o.items)) return new Response("no data", { status: 200 });
 
+    const to = (Deno.env.get("MAIL_TO") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const gmailUser = Deno.env.get("GMAIL_USER");          // Absender-Gmail
+    const gmailPass = Deno.env.get("GMAIL_APP_PASSWORD");  // 16-stelliges App-Passwort
+    const from = gmailUser ? `FCWB Bestellung <${gmailUser}>` : (Deno.env.get("MAIL_FROM") || "FCWB Bestellung <onboarding@resend.dev>");
+    const key = Deno.env.get("RESEND_API_KEY");
+    if ((!key && !gmailUser) || !to.length) return new Response("mail not configured", { status: 200 });
+
     // Art der Mail bestimmen
     const minStage = (x: { items?: { stage?: number }[] }) => Math.min(...(x.items || []).map((i) => Number(i.stage) || 0));
     const keyOf = (i: Record<string, unknown>) => [i.art, i.name, i.size, i.player || "", i.druck || ""].join("|");
