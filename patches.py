@@ -113,7 +113,7 @@ def tracking2(html):
     html=rep1(html,
       r'h=(d,w,K)=>r(e.map(S=>S.id===d?{...S,items:S.items.map((F,k)=>k===w?{...F,stage:K}:F)}:S)),x=(d,w)=>r(e.map(K=>K.id===d?{...K,items:K.items.map(S=>({...S,stage:w}))}:K)),',
       r'AR=(L,id)=>L.map(S=>S.id!==id||S.archived||!S.items.every(F=>F.stage===5)?S:(confirm("Alle Positionen sind übergeben. Bestellung jetzt ins Archiv verschieben?")?{...S,archived:!0}:S)),'
-      r'h=(d,w,K)=>r(AR(e.map(S=>S.id===d?{...S,items:S.items.map((F,k)=>k===w?{...F,stage:K}:F)}:S),d)),x=(d,w)=>r(AR(e.map(K=>K.id===d?{...K,items:K.items.map(S=>({...S,stage:w}))}:K),d)),',
+      r'h=(d,w,K)=>r(AR(e.map(S=>S.id===d?{...S,items:S.items.map((F,k)=>k===w?{...F,stage:K}:F)}:S),d)),x=(d,w)=>r(AR2(e.map(K=>K.id===d?{...K,items:K.items.map(S=>({...S,stage:w}))}:K),d)),',
       'auto-archiv')
     # Stufenleiste pro Position: Bedruckt (Index 3) nur wenn Position eine Bedruckung hat
     html=rep1(html,'function uy({stage:e,onSet:r}){return v.default.createElement("div",{style:{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"flex-end"}},nA.map((t,n)=>{let a=n<=e;',
@@ -196,3 +196,12 @@ def auto_archive(html):
     html=rep1(html,'AR=(L,id)=>L.map(S=>S.id!==id||S.archived||!S.items.every(F=>F.stage===5)?S:(confirm("Alle Positionen sind \xFCbergeben. Bestellung jetzt ins Archiv verschieben?")?{...S,archived:!0}:S)),',
       'AR2=(L,id)=>L.map(S=>{if(S.id!==id||S.archived||!S.items.every(F=>F.stage===5))return S;setTimeout(()=>window.FCWB_ARCHIVED&&window.FCWB_ARCHIVED(S.besteller,S.empfaenger),200);return{...S,archived:!0}}),','auto-arch-fn')
     return html
+
+def bulk_status(html):
+    """Dropdown in der Kopfzeile: Status fuer die ganze Bestellung setzen."""
+    anchor=r'v.default.createElement(Ve,{kind:"danger",small:!0,onClick:()=>m(d.id)},"L\xF6schen")'
+    sel=(r'v.default.createElement("select",{value:"",title:"Status f\xFCr die ganze Bestellung",onChange:F=>{if(F.target.value!==""){x(d.id,Number(F.target.value));F.target.value=""}},'
+         r'style:{padding:"6px 10px",borderRadius:999,border:"1.5px solid "+H.line,fontSize:12,fontWeight:700,color:H.navy,background:"#fff",cursor:"pointer"}},'
+         r'v.default.createElement("option",{value:""},"Status f\xFCr alle …"),'
+         r'nA.map((F,k)=>k===0||k===3&&!d.items.some(I=>I.druck)?null:v.default.createElement("option",{key:k,value:k},F))),')
+    return rep1(html,anchor,sel+anchor,'bulk-status')
