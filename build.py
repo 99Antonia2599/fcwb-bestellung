@@ -29,6 +29,7 @@ out=patches.mail_popup(out)
 out=patches.cart_icon(out)
 out=patches.auto_archive(out)
 out=patches.bulk_status(out)
+out=patches.cart_persist(out)
 out=out.replace('</head>',adapter+'\n'+design+'\n</head>',1)
 # Login-Seite (Passwort nur als SHA-256-Pruefsumme im Code)
 import base64,hashlib

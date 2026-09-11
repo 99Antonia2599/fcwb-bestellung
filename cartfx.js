@@ -20,7 +20,9 @@
   // Zaehler beobachten: steigt er, Effekt ausloesen
   setInterval(function(){
     var el=document.getElementById("fcwb-cartcount"); if(!el) return;
-    var n=parseInt(el.textContent||"0",10)||0;
+    var n=0;
+    try{ n=(JSON.parse(sessionStorage.getItem("fcwb_cart")||"[]")||[]).reduce(function(a,b){return a+(+b.qty||0)},0); }catch(e){ n=parseInt(el.textContent||"0",10)||0; }
+    el.textContent=String(n);
     if(n>last) window.FCWB_CARTFX(n-last);
     last=n;
     var box=document.getElementById("fcwb-cartbox"), cnt=document.getElementById("fcwb-cartcount");

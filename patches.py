@@ -186,14 +186,16 @@ def cart_icon(html):
          'v.default.createElement("circle",{key:"c1",cx:"9.5",cy:"20",r:"1.6",fill:"currentColor",stroke:"none"}),'
          'v.default.createElement("circle",{key:"c2",cx:"17.5",cy:"20",r:"1.6",fill:"currentColor",stroke:"none"}))')
     pill=('v.default.createElement("div",{style:{marginLeft:"auto",display:"flex",alignItems:"center",paddingRight:12}},'
-          'v.default.createElement("span",{id:"fcwb-cartbox",title:"Warenkorb",style:{display:"inline-flex",alignItems:"center",gap:9,background:"#fff",'
+          'v.default.createElement("button",{id:"fcwb-cartbox",title:"Warenkorb öffnen",type:"button",'
+          'onClick:()=>{r("bestellen");setTimeout(()=>window.dispatchEvent(new CustomEvent("fcwb-opencart")),60)},'
+          'style:{display:"inline-flex",alignItems:"center",gap:9,background:"#fff",border:"none",cursor:"pointer",'
           'borderRadius:999,padding:"7px 14px 7px 13px",color:"#0B2A5B",fontWeight:900,lineHeight:1,'
           'boxShadow:"0 4px 14px -4px rgba(0,0,0,.5)",transition:"background .25s,color .25s,transform .2s"}},'
           +svg+','
           'v.default.createElement("span",{id:"fcwb-cartcount",style:{minWidth:26,textAlign:"center",background:"#EEF3FA",color:"#5B6B7B",'
           'borderRadius:999,padding:"3px 10px",fontSize:16,fontWeight:900,transition:"background .25s,color .25s"}},"0")))')
     html=rep1(html,'v.default.createElement(g,{id:"teams",label:"Teams"})','v.default.createElement(g,{id:"teams",label:"Teams"}),'+pill,'cart-icon')
-    html=rep1(html,'Q=f.reduce((b,Y)=>b+Y.qty,0),','Q=f.reduce((b,Y)=>b+Y.qty,0),ZZ=(()=>{let el=typeof document<"u"&&document.getElementById("fcwb-cartcount");if(el)el.textContent=String(Q);return 0})(),','cart-count')
+    html=rep1(html,'Q=f.reduce((b,Y)=>b+Y.qty,0),','Q=f.reduce((b,Y)=>b+Y.qty,0),ZZ=(()=>{let el=typeof document<"u"&&document.getElementById("fcwb-cartcount");if(el)el.textContent=String(Q);return 0})(),ZZ2=(0,v.useEffect)(()=>{let hh=()=>g(!0);window.addEventListener("fcwb-opencart",hh);return()=>window.removeEventListener("fcwb-opencart",hh)},[]),','cart-count')
     return html
 
 def auto_archive(html):
@@ -212,3 +214,11 @@ def bulk_status(html):
          r'v.default.createElement("option",{value:""},"Status f\xFCr alle …"),'
          r'nA.map((F,k)=>k===0||k===3&&!d.items.some(I=>I.druck)?null:v.default.createElement("option",{key:k,value:k},F))),')
     return rep1(html,anchor,sel+anchor,'bulk-status')
+
+def cart_persist(html):
+    """Warenkorb ueberlebt den Reiterwechsel (sessionStorage)."""
+    html=rep1(html,'[f,h]=(0,v.useState)([]),[x,p]=(0,v.useState)(null),',
+      '[f,h]=(0,v.useState)(()=>{try{return JSON.parse(sessionStorage.getItem("fcwb_cart")||"[]")}catch(z){return[]}}),[x,p]=(0,v.useState)(null),','cart-init')
+    html=rep1(html,'ZZ2=(0,v.useEffect)(()=>{let hh=()=>g(!0);window.addEventListener("fcwb-opencart",hh);return()=>window.removeEventListener("fcwb-opencart",hh)},[]),',
+      'ZZ2=(0,v.useEffect)(()=>{let hh=()=>g(!0);window.addEventListener("fcwb-opencart",hh);return()=>window.removeEventListener("fcwb-opencart",hh)},[]),ZZ3=(0,v.useEffect)(()=>{try{sessionStorage.setItem("fcwb_cart",JSON.stringify(f))}catch(z){}},[f]),','cart-persist')
+    return html
