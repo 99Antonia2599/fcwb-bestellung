@@ -57,6 +57,10 @@ html{overflow-x:hidden;}
 #root table tr:hover input,#root table tr:hover select{border-color:#C9D8EC !important;background:#fff !important}
 #root table input:focus,#root table select:focus{border-color:var(--fc-royal) !important;background:#fff !important;box-shadow:0 0 0 3px rgba(29,111,224,.18);outline:none}
 #root table input::placeholder{color:#9AA9BC}
+/* Warenkorb im Kopf: pulsiert, wenn etwas drin ist */
+#root > div > div:nth-child(2) span[title="Warenkorb"]{transition:background .2s,transform .2s}
+#root > div > div:nth-child(2) span[title="Warenkorb"]:hover{background:rgba(255,255,255,.25) !important;transform:scale(1.04)}
+@media (max-width:520px){#root > div > div:nth-child(2) span[title="Warenkorb"]{padding:5px 10px !important;font-size:18px !important}}
 ::selection{background:var(--fc-gold);color:var(--fc-navy);}
 @media (max-width:700px){
   /* Teams: Raster untereinander, Teamliste als horizontale Chips, Tabelle scrollt in der Karte */

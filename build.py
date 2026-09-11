@@ -24,6 +24,9 @@ out=patches.statuslabel(out)
 out=patches.no_excel_pdf(out)
 out=patches.no_phones(out)
 out=patches.status_modal(out)
+out=patches.order_flow(out)
+out=patches.mail_popup(out)
+out=patches.cart_icon(out)
 out=out.replace('</head>',adapter+'\n'+design+'\n</head>',1)
 # Login-Seite (Passwort nur als SHA-256-Pruefsumme im Code)
 import base64,hashlib
@@ -36,7 +39,7 @@ pitch=("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox=
 pw=os.environ.get('FCWB_PASSWORD','FCWB1914')
 login=login.replace('__LOGO__','data:image/png;base64,'+logo_b64).replace('__PITCH__',pitch).replace('__PWHASH__',hashlib.sha256(pw.encode()).hexdigest())
 assert '<div id="root"></div>' in out
-saved=(here/'saved.js').read_text(encoding='utf-8')
+saved=(here/'saved.js').read_text(encoding='utf-8')+(here/'mailinfo.js').read_text(encoding='utf-8')
 out=out.replace('<div id="root"></div>','<div id="root"></div>\n'+login+'\n'+saved,1)
 (here/'index.html').write_text(out,encoding='utf-8')
 print('ok',len(out))

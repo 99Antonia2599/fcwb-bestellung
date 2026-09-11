@@ -26,7 +26,7 @@ def testmode(html, phone):
 def stages(html):
     """Neue erste Stufe 'Auszuloesen' + Knopf 'Bei 11teamsports bestellt'."""
     old=r'nA=["Bestellt","Geliefert","Bedruckt","Abholbereit","\xDCbergeben"],tA=["#8C6D1F","#0070C0","#7A3FB0","#C77700","#1E8E3E"]'
-    new=r'nA=["Auszul\xF6sen","Bestellt","Geliefert","Bedruckt","Abholbereit","\xDCbergeben"],tA=["#C0392B","#8C6D1F","#0070C0","#7A3FB0","#C77700","#1E8E3E"]'
+    new=r'nA=["Bestellt","Bestellt","Geliefert","Bedruckt","Abholbereit","\xDCbergeben"],tA=["#8C6D1F","#8C6D1F","#0070C0","#7A3FB0","#C77700","#1E8E3E"]'
     assert old in html, 'Stufen-Anker nicht gefunden'
     html=html.replace(old,new,1)
     assert html.count('F.stage===4')==2
@@ -34,7 +34,7 @@ def stages(html):
     anchor='!d.archived&&v.default.createElement(Ve,{kind:"primary",small:!0,onClick:()=>n(d.id)},"Status melden")'
     assert anchor in html, 'Status-melden-Anker nicht gefunden'
     btn=r'!d.archived&&w===0&&v.default.createElement(Ve,{kind:"gold",small:!0,onClick:()=>{if(confirm("Bestellung bei 11teamsports ausgel\xF6st? Alle Positionen werden auf \xABBestellt\xBB gesetzt."))x(d.id,1)}},"\u2714 Bei 11teamsports bestellt"),'
-    return html.replace(anchor,btn+anchor,1)
+    return html
 
 def rep1(html, old, new, label):
     assert html.count(old)==1, f'{label}: Anker {html.count(old)}x gefunden'
@@ -53,11 +53,11 @@ def search(html):
 def tracking(html):
     # C) Verfolgung: Hinweistext, Import-Knopf raus, Suche + Statusfilter, PDF-Knopf
     html=rep1(html, r'"Die Besteller senden ihre Bestellung per WhatsApp in die Gruppe. Die ausf\xFChrende Person f\xFCgt sie hier \xFCber ",v.default.createElement("b",null,"\xABBestellung importieren\xBB")," ein und verfolgt den Status. Fertiges wandert ins ",v.default.createElement("b",null,"Archiv"),"."',
-        r'"Neue Bestellungen erscheinen hier automatisch mit Status ",v.default.createElement("b",null,"Auszul\xF6sen"),". Wer bei 11teamsports bestellt hat, klickt ",v.default.createElement("b",null,"✔ Bei 11teamsports bestellt"),". Danach pro Position den Status weiterziehen bis ",v.default.createElement("b",null,"\xDCbergeben"),", fertige Bestellungen ins ",v.default.createElement("b",null,"Archiv"),". Alles wird f\xFCr alle live gespeichert."','hint')
+        r'"Jede Bestellung wurde beim Abschliessen automatisch per E-Mail an den Shop gesendet. Mengen k\xF6nnen hier ge\xE4ndert oder Positionen storniert werden – der Shop wird dabei automatisch informiert. Status pro Position weiterziehen bis ",v.default.createElement("b",null,"\xDCbergeben"),"."','hint')
     html=rep1(html, r'[o,l]=(0,v.useState)(!1),c=e.filter(d=>!d.archived),u=e.filter(d=>d.archived),f=a==="offen"?c:u,',
         r'[o,l]=(0,v.useState)(!1),[FQ,SFQ]=(0,v.useState)(""),[FS,SFS]=(0,v.useState)(""),c=e.filter(d=>!d.archived),u=e.filter(d=>d.archived),f=(a==="offen"?c:u).filter(d=>(!FQ||(d.besteller+" "+(d.empfaenger||"")+" "+Ds(d.date)+" "+(d.note||"")+" "+d.items.map(F=>F.name+" "+F.art+" "+(F.player||"")).join(" ")).toLowerCase().includes(FQ.toLowerCase()))&&(FS===""||Math.min.apply(null,d.items.map(F=>F.stage))===+FS)),','hy-state')
     html=rep1(html, r'v.default.createElement(Ve,{kind:"dark",small:!0,onClick:()=>l(!0),style:{marginLeft:"auto"}},"+ Bestellung importieren")',
-        r'v.default.createElement("input",{value:FQ,onChange:d=>SFQ(d.target.value),placeholder:"Suchen: Besteller, Empf\xE4nger, Artikel, Datum",style:{...'+INPUT_STYLE+r',marginLeft:"auto"}}),v.default.createElement("select",{value:FS,onChange:d=>SFS(d.target.value),style:{padding:"7px 10px",borderRadius:999,border:"1.5px solid "+H.line,fontSize:13,fontWeight:700,color:H.navy}},v.default.createElement("option",{value:""},"Alle Status"),nA.map((d,w)=>v.default.createElement("option",{key:w,value:w},d)))','hy-filter')
+        r'v.default.createElement("input",{value:FQ,onChange:d=>SFQ(d.target.value),placeholder:"Suchen: Besteller, Empf\xE4nger, Artikel, Datum",style:{...'+INPUT_STYLE+r',marginLeft:"auto"}}),v.default.createElement("select",{value:FS,onChange:d=>SFS(d.target.value),style:{padding:"7px 10px",borderRadius:999,border:"1.5px solid "+H.line,fontSize:13,fontWeight:700,color:H.navy}},v.default.createElement("option",{value:""},"Alle Status"),nA.map((d,w)=>w===0?null:v.default.createElement("option",{key:w,value:w},d)))','hy-filter')
     html=rep1(html, r'v.default.createElement(Ve,{kind:"ghost",small:!0,onClick:()=>M0(d)},"Excel"),',
         r'v.default.createElement(Ve,{kind:"ghost",small:!0,onClick:()=>M0(d)},"Excel"),v.default.createElement(Ve,{kind:"ghost",small:!0,onClick:()=>window.FCWB_PDF(d,nA)},"PDF"),','hy-pdf')
     return html
@@ -117,7 +117,7 @@ def tracking2(html):
       'auto-archiv')
     # Stufenleiste pro Position: Bedruckt (Index 3) nur wenn Position eine Bedruckung hat
     html=rep1(html,'function uy({stage:e,onSet:r}){return v.default.createElement("div",{style:{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"flex-end"}},nA.map((t,n)=>{let a=n<=e;',
-      'function uy({stage:e,onSet:r,druck:dr}){return v.default.createElement("div",{style:{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"flex-end"}},nA.map((t,n)=>{if(n===3&&!dr)return null;let a=n<=e;','uy-druck')
+      'function uy({stage:e,onSet:r,druck:dr}){return v.default.createElement("div",{style:{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"flex-end"}},nA.map((t,n)=>{if(n===0)return null;if(n===3&&!dr)return null;let a=n<=e;','uy-druck')
     html=rep1(html,'v.default.createElement(uy,{stage:F.stage,onSet:y=>h(d.id,k,y)})','v.default.createElement(uy,{stage:F.stage,druck:F.druck,onSet:y=>h(d.id,k,y)})','uy-call')
     # "alle setzen": Bedruckt nur wenn irgendeine Position bedruckt ist
     html=rep1(html,'nA.map((F,k)=>v.default.createElement("option",{key:k,value:k},F))','nA.map((F,k)=>k===3&&!d.items.some(I=>I.druck)?null:v.default.createElement("option",{key:k,value:k},F))','alle-setzen')
@@ -144,4 +144,47 @@ def status_modal(html):
     html=rep1(html,r'"Geht an den Besteller sowie immer an Roberto und Erol. Pro Empf\xE4nger einen Button antippen."',r'"WhatsApp \xF6ffnen, Chat oder Gruppe w\xE4hlen und senden \u2013 der Text ist vorausgef\xFCllt."','status-hint')
     html=rep1(html,r'Xg(d.besteller).map(K=>v.default.createElement("a",{key:K,href:zg(K,w),target:"_blank",rel:"noopener noreferrer",style:{textDecoration:"none",background:"#25D366",color:"#fff",borderRadius:8,fontWeight:800,padding:"10px 14px",fontSize:13}},"An ",K)),',
         r'v.default.createElement("a",{href:"https://wa.me/?text="+encodeURIComponent(w),target:"_blank",rel:"noopener noreferrer",style:{textDecoration:"none",background:"#25D366",color:"#fff",borderRadius:999,fontWeight:800,padding:"10px 14px",fontSize:13}},"WhatsApp \xF6ffnen"),','status-btn')
+    return html
+
+def order_flow(html):
+    """Bestellen = Ausloesen: Start bei Bestellt, keine Melde-/Archiv-Knoepfe, Mengen aendern und loeschen in der Verfolgung."""
+    html=rep1(html,'stage:0}}),archived:!1}','stage:1}}),archived:!1}','start-stage')
+    a=html.index('!d.archived&&v.default.createElement("select",{defaultValue:""')
+    b=html.index(r'v.default.createElement(Ve,{kind:"danger",small:!0,onClick:()=>m(d.id)},"L\xF6schen")',a)
+    html=html[:a]+html[b:]
+    old=r'v.default.createElement("td",{style:{padding:"10px 14px",textAlign:"right"}},d.archived?v.default.createElement("span",{style:{fontSize:12,fontWeight:700,color:tA[F.stage]}},nA[F.stage]):v.default.createElement(uy,{stage:F.stage,druck:F.druck,onSet:y=>h(d.id,k,y)}))'
+    new=(r'v.default.createElement("td",{style:{padding:"10px 14px",textAlign:"right",whiteSpace:"nowrap"}},'
+         r'v.default.createElement("div",{style:{display:"inline-flex",gap:6,alignItems:"center",marginRight:10}},'
+         r'v.default.createElement("button",{title:"Menge verringern",onClick:()=>QTY(d.id,k,F.qty-1),style:{width:26,height:26,borderRadius:8,border:"1.5px solid "+H.line,background:"#fff",cursor:"pointer",fontWeight:900,color:H.navy}},"−"),'
+         r'v.default.createElement("span",{style:{minWidth:22,display:"inline-block",fontWeight:800}},F.qty),'
+         r'v.default.createElement("button",{title:"Menge erh\xF6hen",onClick:()=>QTY(d.id,k,F.qty+1),style:{width:26,height:26,borderRadius:8,border:"1.5px solid "+H.line,background:"#fff",cursor:"pointer",fontWeight:900,color:H.navy}},"+"),'
+         r'v.default.createElement("button",{title:"Position stornieren",onClick:()=>QTY(d.id,k,0),style:{marginLeft:4,padding:"4px 9px",borderRadius:8,border:"1.5px solid #F1C7C1",background:"#fff",cursor:"pointer",fontWeight:800,fontSize:12,color:"#C0392B"}},"Stornieren")),'
+         r'v.default.createElement(uy,{stage:F.stage,druck:F.druck,onSet:y=>h(d.id,k,y)}))')
+    html=rep1(html,old,new,'qty-cell')
+    html=rep1(html,'p=(d,w)=>r(e.map(K=>K.id===d?{...K,archived:w}:K)),m=d=>r(e.filter(w=>w.id!==d)),',
+      'p=(d,w)=>r(e.map(K=>K.id===d?{...K,archived:w}:K)),m=d=>{if(!confirm("Ganze Bestellung stornieren? Die Shopkontakte werden per E-Mail informiert."))return;r(e.filter(w=>w.id!==d));MAILINFO("Stornierung gesendet")},',
+      'del-confirm')
+    html=rep1(html,'let[t,n]=(0,v.useState)(null),[a,i]=(0,v.useState)("offen"),',
+      'let QTY=(id,idx,q)=>{let O=e.find(z=>z.id===id);if(!O)return;let it=O.items[idx];'
+      'if(q<=0&&!confirm("Position stornieren: "+it.name+"? Die Shopkontakte werden per E-Mail informiert."))return;'
+      'let ni=q<=0?O.items.filter((z,j)=>j!==idx):O.items.map((z,j)=>j===idx?{...z,qty:q}:z);'
+      'if(!ni.length){if(!confirm("Das war die letzte Position. Ganze Bestellung stornieren?"))return;r(e.filter(z=>z.id!==id));MAILINFO("Stornierung gesendet");return}'
+      'r(e.map(z=>z.id===id?{...z,items:ni}:z));MAILINFO(q>it.qty?"Mengenerh\xF6hung gesendet":"Stornierung gesendet")};'
+      'let[t,n]=(0,v.useState)(null),[a,i]=(0,v.useState)("offen"),','qty-fn')
+    return html
+
+def mail_popup(html):
+    """Popup 'E-Mail wurde gesendet'."""
+    html=rep1(html,'var Og={width:42,height:42','window.MAILINFO=function(t){window.FCWB_MAILINFO&&window.FCWB_MAILINFO(t)};var Og={width:42,height:42','mailinfo-global')
+    html=rep1(html,'n([oe,...t||[]]),i(b||""),h([]),g(!1),w(oe)','n([oe,...t||[]]),i(b||""),h([]),g(!1),w(oe),window.MAILINFO&&window.MAILINFO("Bestellung ausgel\xF6st")','mailinfo-order')
+    return html
+
+def cart_icon(html):
+    """Warenkorb-Symbol oben rechts, immer sichtbar."""
+    html=rep1(html,'v.default.createElement(g,{id:"teams",label:"Teams"})',
+      'v.default.createElement(g,{id:"teams",label:"Teams"}),v.default.createElement("div",{style:{marginLeft:"auto",display:"flex",alignItems:"center",paddingRight:12}},'
+      'v.default.createElement("span",{title:"Warenkorb",style:{display:"inline-flex",alignItems:"center",gap:6,color:"#fff",fontWeight:800,fontSize:13}},"\U0001F6D2",'
+      'v.default.createElement("span",{id:"fcwb-cartcount",style:{minWidth:26,textAlign:"center",background:"#FFC300",color:"#0B2A5B",borderRadius:999,padding:"2px 9px",fontSize:15,fontWeight:900}},"0")))',
+      'cart-icon')
+    html=rep1(html,'Q=f.reduce((b,Y)=>b+Y.qty,0),','Q=f.reduce((b,Y)=>b+Y.qty,0),ZZ=(()=>{let el=typeof document<"u"&&document.getElementById("fcwb-cartcount");if(el)el.textContent=String(Q);return 0})(),','cart-count')
     return html

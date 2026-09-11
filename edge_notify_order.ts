@@ -30,30 +30,37 @@ Deno.serve(async (req) => {
     const o = payload.type === "DELETE" ? payload.old_record?.data : payload.record?.data;
     if (!o || !Array.isArray(o.items)) return new Response("no data", { status: 200 });
 
-    // Bei Aenderungen nur mailen, wenn sich der Gesamtstatus (niedrigste Stufe) oder Archiv geaendert hat
+    // Art der Mail bestimmen
     const minStage = (x: { items?: { stage?: number }[] }) => Math.min(...(x.items || []).map((i) => Number(i.stage) || 0));
+    const keyOf = (i: Record<string, unknown>) => [i.art, i.name, i.size, i.player || "", i.druck || ""].join("|");
     let kind = "Neue Bestellung";
-    let statusText = STAGES[0];
+    let statusText = "Bestellt";
+    let changes: { name: string; art: string; size: string; player: string; oldQty: number; newQty: number }[] = [];
+    let shopMail = true; // Mails, die den Shop betreffen (Bestellung, Storno, Erhoehung, Loeschung)
     if (payload.type === "DELETE") {
-      kind = "Bestellung gelöscht";
-      statusText = "gelöscht";
+      kind = "Stornierung – Bestellung gelöscht"; statusText = "storniert";
+      changes = o.items.map((i: Record<string, unknown>) => ({ name: String(i.name), art: String(i.art), size: String(i.size), player: String(i.player || ""), oldQty: Number(i.qty) || 0, newQty: 0 }));
     } else if (payload.type === "UPDATE") {
       const prev = payload.old_record?.data;
       if (!prev) return new Response("no old data", { status: 200 });
-      const a = minStage(prev), b = minStage(o);
-      const archNow = !!o.archived, archPrev = !!prev.archived;
-      if (a === b && archNow === archPrev) return new Response("no status change", { status: 200 });
-      kind = archNow && !archPrev ? "Bestellung abgeschlossen" : "Status geändert";
-      statusText = archNow ? "Übergeben · im Archiv" : `${STAGES[a] ?? a} → ${STAGES[b] ?? b}`;
+      // Mengen-/Positionsaenderungen
+      const oldMap = new Map<string, Record<string, unknown>>(); (prev.items || []).forEach((i: Record<string, unknown>) => oldMap.set(keyOf(i), i));
+      const newMap = new Map<string, Record<string, unknown>>(); (o.items || []).forEach((i: Record<string, unknown>) => newMap.set(keyOf(i), i));
+      for (const [k, i] of oldMap) { const n = newMap.get(k); const oq = Number(i.qty) || 0, nq = n ? Number(n.qty) || 0 : 0; if (oq !== nq) changes.push({ name: String(i.name), art: String(i.art), size: String(i.size), player: String(i.player || ""), oldQty: oq, newQty: nq }); }
+      for (const [k, i] of newMap) { if (!oldMap.has(k)) changes.push({ name: String(i.name), art: String(i.art), size: String(i.size), player: String(i.player || ""), oldQty: 0, newQty: Number(i.qty) || 0 }); }
+      if (changes.length) {
+        const down = changes.some((c) => c.newQty < c.oldQty), up = changes.some((c) => c.newQty > c.oldQty);
+        kind = down && up ? "Änderung der Bestellung" : down ? "Stornierung – Menge reduziert" : "Mengenerhöhung";
+        statusText = STAGES[minStage(o)] ?? "";
+      } else {
+        const a = minStage(prev), b = minStage(o);
+        const archNow = !!o.archived, archPrev = !!prev.archived;
+        if (a === b && archNow === archPrev) return new Response("no relevant change", { status: 200 });
+        kind = archNow && !archPrev ? "Bestellung abgeschlossen" : "Status geändert";
+        statusText = archNow ? "Übergeben · im Archiv" : `${STAGES[a] ?? a} → ${STAGES[b] ?? b}`;
+        shopMail = false;
+      }
     }
-
-    const to = (Deno.env.get("MAIL_TO") || "").split(",").map((s) => s.trim()).filter(Boolean);
-    const gmailUser = Deno.env.get("GMAIL_USER");          // z. B. sophie173638@gmail.com
-    const gmailPass = Deno.env.get("GMAIL_APP_PASSWORD");  // 16-stelliges App-Passwort
-    const from = gmailUser ? `FCWB Bestellung <${gmailUser}>` : (Deno.env.get("MAIL_FROM") || "FCWB Bestellung <onboarding@resend.dev>");
-    const key = Deno.env.get("RESEND_API_KEY");
-    if ((!key && !gmailUser) || !to.length) return new Response("mail not configured", { status: 200 });
-
     const total = o.items.reduce((a: number, b: { qty?: number }) => a + (Number(b.qty) || 0), 0);
     const subject = `FCWB ${kind}: ${chDate(o.date)} · ${o.besteller}${o.empfaenger ? " → " + o.empfaenger : ""} · ${statusText}`;
     const LOGO = "cid:fcwb-logo";
@@ -83,7 +90,7 @@ Deno.serve(async (req) => {
             <td style="padding-right:16px"><img src="${LOGO}" width="64" height="76" alt="FC Weinfelden-Bürglen" style="display:block;border:0"></td>
             <td style="font-family:Arial,Helvetica,sans-serif;color:#ffffff">
               <div style="font-size:22px;font-weight:bold;letter-spacing:.3px">FC Weinfelden-Bürglen · Materialbestellung</div>
-              <div style="font-size:13px;color:#FFC300;font-weight:bold;margin-top:4px">${kind} · ${statusText}</div>
+              <div style="font-size:13px;color:#FFC300;font-weight:bold;margin-top:4px">${esc(kind)} · ${esc(statusText)}</div>
             </td>
           </tr></table>
         </td>
@@ -97,6 +104,15 @@ Deno.serve(async (req) => {
           ${meta("Positionen", total + " Stück")}
         </table>
       </td></tr>
+      ${changes.length ? `<tr><td style="padding:0 24px 12px">
+        <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#C0392B;margin-bottom:6px">${esc(kind)}</div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+          <tr><th ${th}>Art.-Nr.</th><th ${th}>Artikel</th><th ${th}>Grösse</th><th ${th}>Spieler</th><th ${th.replace('text-align:left', 'text-align:right')}>bisher</th><th ${th.replace('text-align:left', 'text-align:right')}>neu</th><th ${th.replace('text-align:left', 'text-align:right')}>Differenz</th></tr>
+          ${changes.map((c) => `<tr><td ${td}><b>${esc(c.art)}</b></td><td ${td}>${esc(c.name)}</td><td ${td}>${esc(c.size)}</td><td ${td}>${esc(c.player)}</td><td ${td.replace('vertical-align:top', 'vertical-align:top;text-align:right')}>${c.oldQty}</td><td ${td.replace('vertical-align:top', 'vertical-align:top;text-align:right')}>${c.newQty}</td><td ${td.replace('vertical-align:top', 'vertical-align:top;text-align:right;font-weight:bold;color:' + (c.newQty < c.oldQty ? '#C0392B' : '#1E8E3E'))}>${c.newQty - c.oldQty > 0 ? '+' : ''}${c.newQty - c.oldQty}</td></tr>`).join("")}
+        </table>
+        <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#5B6B7B;margin-top:8px">Unten der aktuelle Stand der gesamten Bestellung${payload.type === "DELETE" ? " vor der Löschung" : ""}.</div>
+      </td></tr>` : ""}
+      ${shopMail ? `<tr><td style="padding:0 24px 12px"><div style="background:#FFF6D6;border:1px solid #FFC300;padding:10px 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#0F1E33"><b>Bitte zusätzlich telefonisch bei 11teamsports melden: 044 362 05 55</b></div></td></tr>` : ""}
       <tr><td style="padding:8px 24px 20px">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
           <tr>
