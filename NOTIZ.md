@@ -1,7 +1,9 @@
 # FCWB Materialbestellung – Notiz zur Übergabe (Stand 22.09.2026)
 
 ## Zugang
-- App: https://99antonia2599.github.io/fcwb-bestellung/ (wird auf die Vereinsdomain umgezogen)
+- App: https://fcwb-shop.ch (GitHub Pages, Domain bei IONOS registriert)
+  Die alte Adresse https://99antonia2599.github.io/fcwb-bestellung/ bleibt parallel erreichbar,
+  solange GitHub Pages laeuft.
 - Code: https://github.com/99Antonia2599/fcwb-bestellung (GitHub-Account 99Antonia2599, Antonia)
 - Datenbank: Supabase-Projekt `fcwb-bestellung`, Organisation `FC Weinfelden-Buerglen`, Region Frankfurt, Free-Plan.
   Läuft auf Antonias Supabase-Account. Übertragung an den Verein per «Transfer project» möglich.
@@ -41,6 +43,14 @@ damit vom Netz fern. `build.py` schreibt direkt dorthin.
 
 Der Ordner heisst `docs`, weil GitHub Pages ausser dem Hauptordner nur diesen Namen anbietet
 (Settings → Pages → Folder: `/docs`). Andere Anbieter akzeptieren jeden Namen.
+
+`docs/CNAME` enthaelt die Domain `fcwb-shop.ch`. Die Datei muss dort liegen bleiben, sonst faellt
+die Seite auf die github.io-Adresse zurueck. `build.py` schreibt nur `docs/index.html` und laesst
+sie in Ruhe.
+
+DNS bei IONOS: vier A-Records auf `@` (185.199.108-111.153), kein AAAA-Record. Die Mail-Eintraege
+derselben Domain (MX, SPF, DKIM, DMARC, autodiscover) gehoeren zum Postfach und duerfen nicht
+geloescht werden.
 
 ## Was sich gegenüber Erols letzter Version geändert hat
 - Firebase ist ersetzt durch Supabase. Tabellen `orders` und `teams`: eine Zeile pro Bestellung bzw. Team,
