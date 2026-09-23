@@ -1,4 +1,4 @@
-# FCWB Materialbestellung – Notiz zur Übergabe (Stand 22.09.2026)
+# FCWB Materialbestellung – Notiz zur Übergabe (Stand 23.09.2026)
 
 ## Zugang
 - App: https://fcwb-shop.ch (GitHub Pages, Domain bei IONOS registriert)
@@ -82,10 +82,35 @@ Keine Handynummern mehr in der App. «WhatsApp öffnen» startet WhatsApp mit vo
 Datenbank-Webhook `notify_order_mail` (INSERT, UPDATE und DELETE auf `orders`) → Edge Function
 `notify-order` → Mail. Am 23.09.2026 über `pg_trigger` geprüft: alle drei Ereignisse aktiv.
 Versand über Gmail-SMTP mit Erols privatem Konto (Adresse und App-Passwort stehen in den Supabase-Secrets
-`GMAIL_USER` und `GMAIL_APP_PASSWORD`); damit sind beliebige Empfänger möglich. Empfänger in `MAIL_TO`
-(kommagetrennt). Resend (`RESEND_API_KEY`, `MAIL_FROM`) bleibt als Rückfall, sendet aber ohne eigene Domain
-nur an die dort verifizierte Adresse. Quellcode: `edge_notify_order.ts`.
-Mail bei: neuer Bestellung; Änderung des Gesamtstatus (niedrigste Stufe über alle Positionen); Archivierung.
+`GMAIL_USER` und `GMAIL_APP_PASSWORD`); damit sind beliebige Empfänger möglich. Resend
+(`RESEND_API_KEY`, `MAIL_FROM`) bleibt als Rückfall, sendet aber ohne eigene Domain nur an die dort
+verifizierte Adresse. Quellcode: `edge_notify_order.ts`.
+
+Mail bei: neuer Bestellung; Mengenänderung oder Storno; **jedem Stufenwechsel einer Position**;
+Löschung; Archivierung.
+
+Der Stufenwechsel wird **je Position** verglichen. Früher zählte nur der Gesamtstatus, also das Minimum
+über alle Positionen – bei einer Teillieferung ging deshalb keine Mail raus, solange eine einzige
+Position zurückhing, obwohl der Rest längst da war. Seit 23.09.2026 meldet jede Änderung, und die Mail
+listet auf, welche Positionen gewechselt haben und wohin.
+
+Eine Mail entsteht pro **Speichervorgang**, nicht pro Position: Wer über das Dropdown «Status für die
+ganze Bestellung» alle auf einmal setzt, löst eine einzige Mail aus. Wer zehn Positionen einzeln
+anklickt, löst zehn aus. Bei grossen Bestellungen also besser das Dropdown nehmen.
+
+**Wer was bekommt** (Adressen stehen in Secrets, nicht im Code – das Repo ist öffentlich):
+
+| Secret | Wer | Wann |
+|---|---|---|
+| `MAIL_INTERN` | Erol, Roberto | jede Mail |
+| `MAIL_BESTELLER` | JSON Name→Adresse | der Besteller der jeweiligen Bestellung, jede Mail |
+| `MAIL_SHOP` | Shopkontakte | nur Auslösung, Mengenänderung, Storno, Löschung |
+| `MAIL_CC` | Antonia | jede Mail, im CC |
+| `MAIL_TO` | – | nur noch Rückfall, falls `MAIL_INTERN` leer ist |
+
+Die Namen in `MAIL_BESTELLER` müssen exakt dem Dropdown in der App entsprechen:
+`Roberto, Francis, Erol, Muriel, Rami, Joelle`. Ein Tippfehler heisst stillschweigend: Besteller
+bekommt keine Mail. Doppelte Adressen fallen raus, wer schon Empfänger ist, steht nicht nochmal im CC.
 Wappen ist als eingebettete Anlage (CID) in der Mail, weil Outlook externe Bilder blockiert; es macht rund
 42 KB pro Mail aus, bei realistischem Betrieb also etwa 50 MB im Jahr.
 
@@ -104,8 +129,16 @@ Umstellung keine Daten mehr zurück – geprüft wird nur, ob die Datenbank übe
   die App lässt sich nicht mehr neu bauen – übrig bliebe nur die fertige `docs/index.html`. Gehört ins Repo.
 - Der öffentliche Supabase-Schlüssel stand von Anfang an in der Seite und in der Git-Historie. Das ist so
   vorgesehen, aber er lässt sich nicht zurückholen; der Schutz liegt deshalb allein bei den Policies.
-  Bis zum 22.09.2026 waren diese offen, das heisst die Bestelldaten waren in dieser Zeit öffentlich les- und
+  Bis zum 23.09.2026 waren diese offen, das heisst die Bestelldaten waren in dieser Zeit öffentlich les- und
   änderbar. Hinweise auf einen Zugriff gibt es keine (das Repo hatte keine Sterne, Forks oder Klone).
+  Seit dem 23.09.2026 greifen `orders_auth` und `teams_auth`; eine Abfrage mit dem öffentlichen Schlüssel
+  ohne Anmeldung liefert seither eine leere Liste. Genau diese Abfrage eignet sich als Kontrolle, falls
+  jemand die Policies später anfasst.
+- Bei Statuswechseln entsteht eine Mail pro Speichervorgang. Wer viele Positionen einzeln abhakt, löst
+  entsprechend viele Mails aus; das Dropdown «Status für die ganze Bestellung» erzeugt eine einzige.
+  Angedacht und bewusst zurückgestellt: Häkchen pro Position plus «markierte auf Stufe X setzen», damit
+  sich eine Teillieferung in einem Schritt abhaken liesse – ein Speichervorgang, eine Mail. Ein Knopf
+  «jetzt melden» wurde verworfen: Wer ihn vergisst, meldet nie etwas.
 - Supabase Free-Plan pausiert das Projekt nach 7 Tagen ohne Zugriff; im Dashboard wieder starten.
 - Repo, Supabase-Projekt, Domain und Absenderkonto laufen auf Privatpersonen. Bei einem Wechsel im Vorstand
   sollte das dem Verein gehören.
