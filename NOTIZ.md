@@ -1,4 +1,4 @@
-# FCWB Materialbestellung – Notiz zur Übergabe (Stand 22.09.2026)
+# FCWB Materialbestellung – Notiz zur Übergabe (Stand 23.09.2026)
 
 ## Zugang
 - App: https://fcwb-shop.ch (GitHub Pages, Domain bei IONOS registriert)
@@ -82,10 +82,28 @@ Keine Handynummern mehr in der App. «WhatsApp öffnen» startet WhatsApp mit vo
 Datenbank-Webhook `notify_order_mail` (INSERT, UPDATE und DELETE auf `orders`) → Edge Function
 `notify-order` → Mail. Am 23.09.2026 über `pg_trigger` geprüft: alle drei Ereignisse aktiv.
 Versand über Gmail-SMTP mit Erols privatem Konto (Adresse und App-Passwort stehen in den Supabase-Secrets
-`GMAIL_USER` und `GMAIL_APP_PASSWORD`); damit sind beliebige Empfänger möglich. Empfänger in `MAIL_TO`
-(kommagetrennt). Resend (`RESEND_API_KEY`, `MAIL_FROM`) bleibt als Rückfall, sendet aber ohne eigene Domain
-nur an die dort verifizierte Adresse. Quellcode: `edge_notify_order.ts`.
-Mail bei: neuer Bestellung; Änderung des Gesamtstatus (niedrigste Stufe über alle Positionen); Archivierung.
+`GMAIL_USER` und `GMAIL_APP_PASSWORD`); damit sind beliebige Empfänger möglich. Resend
+(`RESEND_API_KEY`, `MAIL_FROM`) bleibt als Rückfall, sendet aber ohne eigene Domain nur an die dort
+verifizierte Adresse. Quellcode: `edge_notify_order.ts`.
+
+Mail bei: neuer Bestellung; Mengenänderung oder Storno; Änderung des Gesamtstatus (niedrigste Stufe
+über alle Positionen); Löschung; Archivierung.
+**Achtung bei Teillieferungen:** Der Gesamtstatus ist das Minimum über alle Positionen. Solange eine
+Position zurückhängt, wechselt er nicht und es geht keine Mail raus – auch wenn der Rest längst da ist.
+
+**Wer was bekommt** (Adressen stehen in Secrets, nicht im Code – das Repo ist öffentlich):
+
+| Secret | Wer | Wann |
+|---|---|---|
+| `MAIL_INTERN` | Erol, Roberto | jede Mail |
+| `MAIL_BESTELLER` | JSON Name→Adresse | der Besteller der jeweiligen Bestellung, jede Mail |
+| `MAIL_SHOP` | Shopkontakte | nur Auslösung, Mengenänderung, Storno, Löschung |
+| `MAIL_CC` | Antonia | jede Mail, im CC |
+| `MAIL_TO` | – | nur noch Rückfall, falls `MAIL_INTERN` leer ist |
+
+Die Namen in `MAIL_BESTELLER` müssen exakt dem Dropdown in der App entsprechen:
+`Roberto, Francis, Erol, Muriel, Rami, Joelle`. Ein Tippfehler heisst stillschweigend: Besteller
+bekommt keine Mail. Doppelte Adressen fallen raus, wer schon Empfänger ist, steht nicht nochmal im CC.
 Wappen ist als eingebettete Anlage (CID) in der Mail, weil Outlook externe Bilder blockiert; es macht rund
 42 KB pro Mail aus, bei realistischem Betrieb also etwa 50 MB im Jahr.
 
