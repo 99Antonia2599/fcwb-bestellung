@@ -50,9 +50,21 @@ create policy "teams_auth" on public.teams for all to authenticated
   using      ((auth.jwt() ->> 'email') = 'bestellung@fcwb-shop.ch')
   with check ((auth.jwt() ->> 'email') = 'bestellung@fcwb-shop.ch');
 
--- Live-Sync (prüft dieselben Policies)
-alter publication supabase_realtime add table public.orders;
-alter publication supabase_realtime add table public.teams;
+-- Live-Sync (prüft dieselben Policies).
+-- "add table" bricht mit Fehler ab, wenn die Tabelle schon in der Publikation ist –
+-- und weil der SQL-Editor alles in einer Transaktion ausführt, wäre damit auch die
+-- Absicherung oben wieder verworfen. Deshalb vorher nachsehen.
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables
+                 where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'orders') then
+    alter publication supabase_realtime add table public.orders;
+  end if;
+  if not exists (select 1 from pg_publication_tables
+                 where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'teams') then
+    alter publication supabase_realtime add table public.teams;
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- Kontrolle nach dem Ausführen: beide Zeilen müssen rowsecurity = true zeigen,
