@@ -40,7 +40,7 @@ pitch=("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox=
  "<rect x='10' y='10' width='580' height='280' rx='4'/><line x1='300' y1='10' x2='300' y2='290'/><circle cx='300' cy='150' r='55'/>"
  "<rect x='10' y='70' width='95' height='160'/><rect x='10' y='110' width='40' height='80'/><rect x='495' y='70' width='95' height='160'/><rect x='550' y='110' width='40' height='80'/>"
  "<path d='M105 115 a45 45 0 0 1 0 70'/><path d='M495 115 a45 45 0 0 0 0 70'/></svg>")
-email=sys.argv[3] if len(sys.argv)>3 else os.environ.get('FCWB_LOGIN_EMAIL','bestellung@fcwb.ch')
+email=sys.argv[3] if len(sys.argv)>3 else os.environ.get('FCWB_LOGIN_EMAIL','bestellung@fcwb-shop.ch')
 login=login.replace('__LOGO__','data:image/png;base64,'+logo_b64).replace('__PITCH__',pitch).replace('__LOGIN_EMAIL__',email)
 assert '__LOGIN_EMAIL__' not in login, 'Platzhalter fuer die Login-Adresse nicht ersetzt'
 assert '<div id="root"></div>' in out

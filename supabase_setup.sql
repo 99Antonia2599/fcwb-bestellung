@@ -43,12 +43,12 @@ drop policy if exists "orders_auth" on public.orders;
 drop policy if exists "teams_auth"  on public.teams;
 
 create policy "orders_auth" on public.orders for all to authenticated
-  using      ((auth.jwt() ->> 'email') = 'bestellung@fcwb.ch')
-  with check ((auth.jwt() ->> 'email') = 'bestellung@fcwb.ch');
+  using      ((auth.jwt() ->> 'email') = 'bestellung@fcwb-shop.ch')
+  with check ((auth.jwt() ->> 'email') = 'bestellung@fcwb-shop.ch');
 
 create policy "teams_auth" on public.teams for all to authenticated
-  using      ((auth.jwt() ->> 'email') = 'bestellung@fcwb.ch')
-  with check ((auth.jwt() ->> 'email') = 'bestellung@fcwb.ch');
+  using      ((auth.jwt() ->> 'email') = 'bestellung@fcwb-shop.ch')
+  with check ((auth.jwt() ->> 'email') = 'bestellung@fcwb-shop.ch');
 
 -- Live-Sync (prüft dieselben Policies)
 alter publication supabase_realtime add table public.orders;

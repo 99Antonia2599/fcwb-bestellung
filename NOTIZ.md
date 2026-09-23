@@ -7,7 +7,7 @@
 - Code: https://github.com/99Antonia2599/fcwb-bestellung (GitHub-Account 99Antonia2599, Antonia)
 - Datenbank: Supabase-Projekt `fcwb-bestellung`, Organisation `FC Weinfelden-Buerglen`, Region Frankfurt, Free-Plan.
   Läuft auf Antonias Supabase-Account. Übertragung an den Verein per «Transfer project» möglich.
-- Anmeldung in der App: gemeinsames Vereinskonto `bestellung@fcwb.ch`. Das Passwort kennen die
+- Anmeldung in der App: gemeinsames Vereinskonto `bestellung@fcwb-shop.ch`. Das Passwort kennen die
   sechs Personen, die bestellen; es steht **nicht** im Code, sondern nur in Supabase.
 
 ## Anmeldung und Schutz der Daten
@@ -25,7 +25,7 @@ Das hängt an zwei Dingen, die zusammengehören:
 Die Anmeldung bleibt pro Gerät gemerkt und erneuert sich selbst. Unten rechts gibt es
 «Abmelden», um ein Gerät wieder zu lösen.
 
-**Passwort ändern:** Supabase-Dashboard → Authentication → Users → beim Konto `bestellung@fcwb.ch`
+**Passwort ändern:** Supabase-Dashboard → Authentication → Users → beim Konto `bestellung@fcwb-shop.ch`
 auf «Reset password» bzw. das Passwort neu setzen. Kein neuer Build nötig, die Seite bleibt wie sie ist.
 
 **Mailadresse des Kontos ändern:** an drei Stellen anpassen, sonst kommt niemand mehr rein –
@@ -106,5 +106,5 @@ Umstellung keine Daten mehr zurück – geprüft wird nur, ob die Datenbank übe
 
 ## Neu bauen nach Änderungen
 `python build.py <SUPABASE_URL> <PUBLISHABLE_KEY> [LOGIN_EMAIL]` erzeugt `docs/index.html` aus `../index_7.html`
-(Erols Original), `adapter.js`, `design.css` und `images.json`. Ohne drittes Argument wird `bestellung@fcwb.ch`
+(Erols Original), `adapter.js`, `design.css` und `images.json`. Ohne drittes Argument wird `bestellung@fcwb-shop.ch`
 eingesetzt. Danach `git push`, die veröffentlichte Seite aktualisiert sich.
