@@ -79,7 +79,8 @@ Bestellung abschliessen → Status «Auszulösen» → ausführende Person beste
 Keine Handynummern mehr in der App. «WhatsApp öffnen» startet WhatsApp mit vorausgefülltem Text, Chat oder Gruppe wählt man selbst.
 
 ## E-Mail bei neuer Bestellung
-Datenbank-Webhook `notify_order_mail` (INSERT + UPDATE auf `orders`) → Edge Function `notify-order` → Mail.
+Datenbank-Webhook `notify_order_mail` (INSERT, UPDATE und DELETE auf `orders`) → Edge Function
+`notify-order` → Mail. Am 23.09.2026 über `pg_trigger` geprüft: alle drei Ereignisse aktiv.
 Versand über Gmail-SMTP mit Erols privatem Konto (Adresse und App-Passwort stehen in den Supabase-Secrets
 `GMAIL_USER` und `GMAIL_APP_PASSWORD`); damit sind beliebige Empfänger möglich. Empfänger in `MAIL_TO`
 (kommagetrennt). Resend (`RESEND_API_KEY`, `MAIL_FROM`) bleibt als Rückfall, sendet aber ohne eigene Domain
