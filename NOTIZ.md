@@ -32,9 +32,14 @@ auf «Reset password» bzw. das Passwort neu setzen. Kein neuer Build nötig, di
 in Supabase beim Konto selbst, in `supabase_setup.sql` (zweimal, in beiden Policies, danach
 das SQL neu ausführen) und beim Bauen über `FCWB_LOGIN_EMAIL` bzw. das dritte Argument.
 
-**Wichtig in Supabase:** unter Authentication → Sign In / Providers die freie Registrierung
-ausgeschaltet lassen. Zur Sicherheit prüfen die Policies zusätzlich die Mailadresse, ein
+**Wichtig in Supabase:** unter Authentication → Sign In / Providers, Abschnitt «User Signups»,
+muss «Allow new users to sign up» ausgeschaltet bleiben – nicht beim Anbieter «Email» selbst,
+der bleibt aktiviert. Zur Sicherheit prüfen die Policies zusätzlich die Mailadresse, ein
 selbst angelegtes Konto käme also ohnehin nicht durch.
+
+Das Konto wurde am 23.09.2026 angelegt und per «Auto Confirm User» bestätigt. Es ging keine
+Bestätigungsmail raus, weil hinter der Adresse bewusst kein Postfach liegt – sie ist nur
+Benutzername. Passwort neu setzen geht deshalb ausschliesslich über das Dashboard.
 
 ## Veröffentlichung
 Veröffentlicht wird **nur der Ordner `docs/`**, und darin liegt nur die fertige `index.html`.
