@@ -31,18 +31,24 @@ out=patches.auto_archive(out)
 out=patches.bulk_status(out)
 out=patches.cart_persist(out)
 out=out.replace('</head>',adapter+'\n'+design+'\n</head>',1)
-# Login-Seite (Passwort nur als SHA-256-Pruefsumme im Code)
-import base64,hashlib
+# Login-Seite. Das Passwort steht nicht im Code: geprueft wird es von Supabase Auth.
+# Eingesetzt wird hier nur die Adresse des gemeinsamen Vereinskontos.
+import base64
 login=(here/'login.js').read_text(encoding='utf-8')
 logo_b64=base64.b64encode((here/'logo.png').read_bytes()).decode()
 pitch=("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 300' fill='none' stroke='white' stroke-width='2.5' stroke-opacity='.18'>"
  "<rect x='10' y='10' width='580' height='280' rx='4'/><line x1='300' y1='10' x2='300' y2='290'/><circle cx='300' cy='150' r='55'/>"
  "<rect x='10' y='70' width='95' height='160'/><rect x='10' y='110' width='40' height='80'/><rect x='495' y='70' width='95' height='160'/><rect x='550' y='110' width='40' height='80'/>"
  "<path d='M105 115 a45 45 0 0 1 0 70'/><path d='M495 115 a45 45 0 0 0 0 70'/></svg>")
-pw=os.environ.get('FCWB_PASSWORD','FCWB1914')
-login=login.replace('__LOGO__','data:image/png;base64,'+logo_b64).replace('__PITCH__',pitch).replace('__PWHASH__',hashlib.sha256(pw.encode()).hexdigest())
+email=sys.argv[3] if len(sys.argv)>3 else os.environ.get('FCWB_LOGIN_EMAIL','bestellung@fcwb-shop.ch')
+login=login.replace('__LOGO__','data:image/png;base64,'+logo_b64).replace('__PITCH__',pitch).replace('__LOGIN_EMAIL__',email)
+assert '__LOGIN_EMAIL__' not in login, 'Platzhalter fuer die Login-Adresse nicht ersetzt'
 assert '<div id="root"></div>' in out
 saved=(here/'saved.js').read_text(encoding='utf-8')+(here/'mailinfo.js').read_text(encoding='utf-8')+(here/'cartfx.js').read_text(encoding='utf-8')
 out=out.replace('<div id="root"></div>','<div id="root"></div>\n'+login+'\n'+saved,1)
-(here/'index.html').write_text(out,encoding='utf-8')
-print('ok',len(out))
+# Veroeffentlicht wird nur dieser Ordner. Alles andere im Repo (Notiz, Bilddaten,
+# Build-Skripte) bleibt damit vom Netz fern, egal wo gehostet wird.
+docs=here/'docs'; docs.mkdir(exist_ok=True)
+(docs/'index.html').write_text(out,encoding='utf-8')
+if '__SUPABASE_URL__' in out: print('ACHTUNG: ohne Zugangsdaten gebaut, die App bleibt offline.')
+print('ok',len(out),'-> docs/index.html, Login-Konto:',email)

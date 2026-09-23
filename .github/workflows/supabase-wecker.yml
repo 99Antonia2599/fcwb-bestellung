@@ -21,7 +21,11 @@ jobs:
             -H "Authorization: Bearer sb_publishable_b9EbsvwSs8HPvnBw4_KvTw_cJ_CM3FK" \
             "https://zsscsphixrupplaihhxo.supabase.co/rest/v1/orders?select=id&limit=1")
           echo "Antwort: $code"
-          test "$code" = "200"
+          # Seit der Umstellung auf Anmeldung geben die Tabellen dem oeffentlichen
+          # Schluessel nichts mehr heraus: Die Antwort ist 200 mit leerer Liste (oder
+          # 401/403). Entscheidend ist hier nur, dass die Datenbank ueberhaupt
+          # antwortet - ein pausiertes Projekt tut das nicht.
+          case "$code" in 200|401|403) ;; *) exit 1 ;; esac
       - name: Laufdatum eintragen (hält den Zeitplan aktiv)
         run: |
           date -u +"%Y-%m-%d %H:%M UTC – Datenbank erreichbar" > .github/wecker-letzter-lauf.txt
