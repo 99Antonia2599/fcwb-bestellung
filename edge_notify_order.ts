@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
     let kind = "Neue Bestellung";
     let statusText = "Bestellt – beim Shop ausgelöst";
     let changes: { name: string; art: string; size: string; player: string; oldQty: number; newQty: number }[] = [];
+    let stageChanges: { name: string; art: string; size: string; player: string; oldStage: number; newStage: number }[] = [];
     let shopMail = true; // Mails, die den Shop betreffen (Bestellung, Storno, Erhoehung, Loeschung)
     if (payload.type === "DELETE") {
       kind = "Stornierung – Bestellung gelöscht"; statusText = "storniert";
@@ -71,11 +72,28 @@ Deno.serve(async (req) => {
         kind = down && up ? "Änderung der Bestellung" : down ? "Stornierung – Menge reduziert" : "Mengenerhöhung";
         statusText = STAGES[minStage(o)] ?? "";
       } else {
-        const a = minStage(prev), b = minStage(o);
+        // Jede Position einzeln vergleichen, nicht nur den Gesamtstatus. Sonst bliebe
+        // eine Teillieferung stumm, solange eine einzige Position zurückhängt – und
+        // genau dann will jemand wissen, dass er bedrucken lassen kann.
+        for (const [k, i] of oldMap) {
+          const n = newMap.get(k); if (!n) continue;
+          const os = Number(i.stage) || 0, ns = Number(n.stage) || 0;
+          // Stufe 0 und 1 heissen beide "Bestellt" – ein Wechsel dazwischen ist nichts Sichtbares.
+          if (os === ns || STAGES[os] === STAGES[ns]) continue;
+          stageChanges.push({ name: String(i.name), art: String(i.art), size: String(i.size), player: String(i.player || ""), oldStage: os, newStage: ns });
+        }
         const archNow = !!o.archived, archPrev = !!prev.archived;
-        if (a === b && archNow === archPrev) return new Response("no relevant change", { status: 200 });
+        if (!stageChanges.length && archNow === archPrev) return new Response("no relevant change", { status: 200 });
         kind = archNow && !archPrev ? "Bestellung abgeschlossen" : "Status geändert";
-        statusText = archNow ? "Übergeben · im Archiv" : `${STAGES[a] ?? a} → ${STAGES[b] ?? b}`;
+        if (archNow && !archPrev) {
+          statusText = "Übergeben · im Archiv";
+        } else {
+          const ziele = [...new Set(stageChanges.map((c) => c.newStage))];
+          const n = stageChanges.length;
+          statusText = ziele.length === 1
+            ? `${n} ${n === 1 ? "Position" : "Positionen"} → ${STAGES[ziele[0]] ?? ziele[0]}`
+            : `${n} Positionen aktualisiert`;
+        }
         shopMail = false;
       }
     }
@@ -149,6 +167,14 @@ Deno.serve(async (req) => {
           ${changes.map((c) => `<tr><td ${td}><b>${esc(c.art)}</b></td><td ${td}>${esc(c.name)}</td><td ${td}>${esc(c.size)}</td><td ${td}>${esc(c.player)}</td><td ${td.replace('vertical-align:top', 'vertical-align:top;text-align:right')}>${c.oldQty}</td><td ${td.replace('vertical-align:top', 'vertical-align:top;text-align:right')}>${c.newQty}</td><td ${td.replace('vertical-align:top', 'vertical-align:top;text-align:right;font-weight:bold;color:' + (c.newQty < c.oldQty ? '#C0392B' : '#1E8E3E'))}>${c.newQty - c.oldQty > 0 ? '+' : ''}${c.newQty - c.oldQty}</td></tr>`).join("")}
         </table>
         <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#5B6B7B;margin-top:8px">Unten der aktuelle Stand der gesamten Bestellung${payload.type === "DELETE" ? " vor der Löschung" : ""}.</div>
+      </td></tr>` : ""}
+      ${stageChanges.length ? `<tr><td style="padding:0 24px 12px">
+        <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#0070C0;margin-bottom:6px">Diese Positionen haben die Stufe gewechselt</div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+          <tr><th ${th}>Art.-Nr.</th><th ${th}>Artikel</th><th ${th}>Grösse</th><th ${th}>Spieler</th><th ${th}>bisher</th><th ${th}>neu</th></tr>
+          ${stageChanges.map((c) => `<tr><td ${td}><b>${esc(c.art)}</b></td><td ${td}>${esc(c.name)}</td><td ${td}>${esc(c.size)}</td><td ${td}>${esc(c.player)}</td><td ${td}>${esc(STAGES[c.oldStage] ?? c.oldStage)}</td><td ${td.replace('vertical-align:top', 'vertical-align:top;font-weight:bold;color:#0070C0')}>${esc(STAGES[c.newStage] ?? c.newStage)}</td></tr>`).join("")}
+        </table>
+        <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#5B6B7B;margin-top:8px">Unten der aktuelle Stand der gesamten Bestellung.</div>
       </td></tr>` : ""}
       ${changes.some((c) => c.newQty < c.oldQty) ? `<tr><td style="padding:0 24px 12px"><div style="background:#FFF6D6;border:1px solid #FFC300;padding:10px 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#0F1E33"><b>Bitte zusätzlich telefonisch bei 11teamsports melden: 044 362 05 55</b></div></td></tr>` : ""}
       <tr><td style="padding:8px 24px 20px">

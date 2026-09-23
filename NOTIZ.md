@@ -86,10 +86,17 @@ Versand über Gmail-SMTP mit Erols privatem Konto (Adresse und App-Passwort steh
 (`RESEND_API_KEY`, `MAIL_FROM`) bleibt als Rückfall, sendet aber ohne eigene Domain nur an die dort
 verifizierte Adresse. Quellcode: `edge_notify_order.ts`.
 
-Mail bei: neuer Bestellung; Mengenänderung oder Storno; Änderung des Gesamtstatus (niedrigste Stufe
-über alle Positionen); Löschung; Archivierung.
-**Achtung bei Teillieferungen:** Der Gesamtstatus ist das Minimum über alle Positionen. Solange eine
-Position zurückhängt, wechselt er nicht und es geht keine Mail raus – auch wenn der Rest längst da ist.
+Mail bei: neuer Bestellung; Mengenänderung oder Storno; **jedem Stufenwechsel einer Position**;
+Löschung; Archivierung.
+
+Der Stufenwechsel wird **je Position** verglichen. Früher zählte nur der Gesamtstatus, also das Minimum
+über alle Positionen – bei einer Teillieferung ging deshalb keine Mail raus, solange eine einzige
+Position zurückhing, obwohl der Rest längst da war. Seit 23.09.2026 meldet jede Änderung, und die Mail
+listet auf, welche Positionen gewechselt haben und wohin.
+
+Eine Mail entsteht pro **Speichervorgang**, nicht pro Position: Wer über das Dropdown «Status für die
+ganze Bestellung» alle auf einmal setzt, löst eine einzige Mail aus. Wer zehn Positionen einzeln
+anklickt, löst zehn aus. Bei grossen Bestellungen also besser das Dropdown nehmen.
 
 **Wer was bekommt** (Adressen stehen in Secrets, nicht im Code – das Repo ist öffentlich):
 
