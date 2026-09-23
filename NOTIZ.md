@@ -104,8 +104,11 @@ Umstellung keine Daten mehr zurück – geprüft wird nur, ob die Datenbank übe
   die App lässt sich nicht mehr neu bauen – übrig bliebe nur die fertige `docs/index.html`. Gehört ins Repo.
 - Der öffentliche Supabase-Schlüssel stand von Anfang an in der Seite und in der Git-Historie. Das ist so
   vorgesehen, aber er lässt sich nicht zurückholen; der Schutz liegt deshalb allein bei den Policies.
-  Bis zum 22.09.2026 waren diese offen, das heisst die Bestelldaten waren in dieser Zeit öffentlich les- und
+  Bis zum 23.09.2026 waren diese offen, das heisst die Bestelldaten waren in dieser Zeit öffentlich les- und
   änderbar. Hinweise auf einen Zugriff gibt es keine (das Repo hatte keine Sterne, Forks oder Klone).
+  Seit dem 23.09.2026 greifen `orders_auth` und `teams_auth`; eine Abfrage mit dem öffentlichen Schlüssel
+  ohne Anmeldung liefert seither eine leere Liste. Genau diese Abfrage eignet sich als Kontrolle, falls
+  jemand die Policies später anfasst.
 - Supabase Free-Plan pausiert das Projekt nach 7 Tagen ohne Zugriff; im Dashboard wieder starten.
 - Repo, Supabase-Projekt, Domain und Absenderkonto laufen auf Privatpersonen. Bei einem Wechsel im Vorstand
   sollte das dem Verein gehören.
