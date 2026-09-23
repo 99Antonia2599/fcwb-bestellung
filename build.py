@@ -1,6 +1,13 @@
 import re,sys,pathlib,os
 here=pathlib.Path(__file__).parent
-src=(here.parent/'index_7.html').read_text(encoding='utf-8')
+# Erols Original, die Vorlage fuer den ganzen Build. Erst im Repo suchen, dann
+# eine Ebene darueber - dort lag sie historisch auf Antonias Rechner.
+_src=next((q for q in (here/'index_7.html', here.parent/'index_7.html') if q.exists()), None)
+assert _src, ('index_7.html nicht gefunden. Die Datei ist Erols Original und die Vorlage '
+              'fuer den Build; ohne sie laesst sich die App nicht neu bauen. Erwartet in '
+              f'{here} oder {here.parent}.')
+print('Vorlage:',_src)
+src=_src.read_text(encoding='utf-8')
 url=sys.argv[1] if len(sys.argv)>1 else '__SUPABASE_URL__'
 key=sys.argv[2] if len(sys.argv)>2 else '__SUPABASE_ANON_KEY__'
 adapter=(here/'adapter.js').read_text(encoding='utf-8').replace('__SUPABASE_URL__',url).replace('__SUPABASE_ANON_KEY__',key)
