@@ -124,9 +124,6 @@ mailt GitHub die Repo-Inhaberin. Die Anfrage läuft mit dem öffentlichen Schlü
 Umstellung keine Daten mehr zurück – geprüft wird nur, ob die Datenbank überhaupt antwortet.
 
 ## Offen / bekannt
-- **Die Build-Quelle `index_7.html` liegt nicht im Repo.** `build.py` erwartet sie im übergeordneten Ordner
-  (Erols Original). Solange sie nur auf einem privaten Rechner liegt, ist sie bei einem Geräteverlust weg und
-  die App lässt sich nicht mehr neu bauen – übrig bliebe nur die fertige `docs/index.html`. Gehört ins Repo.
 - Der öffentliche Supabase-Schlüssel stand von Anfang an in der Seite und in der Git-Historie. Das ist so
   vorgesehen, aber er lässt sich nicht zurückholen; der Schutz liegt deshalb allein bei den Policies.
   Bis zum 23.09.2026 waren diese offen, das heisst die Bestelldaten waren in dieser Zeit öffentlich les- und
@@ -144,6 +141,14 @@ Umstellung keine Daten mehr zurück – geprüft wird nur, ob die Datenbank übe
   sollte das dem Verein gehören.
 
 ## Neu bauen nach Änderungen
-`python build.py <SUPABASE_URL> <PUBLISHABLE_KEY> [LOGIN_EMAIL]` erzeugt `docs/index.html` aus `../index_7.html`
-(Erols Original), `adapter.js`, `design.css` und `images.json`. Ohne drittes Argument wird `bestellung@fcwb-shop.ch`
-eingesetzt. Danach `git push`, die veröffentlichte Seite aktualisiert sich.
+`python build.py <SUPABASE_URL> <PUBLISHABLE_KEY> [LOGIN_EMAIL]` erzeugt `docs/index.html` aus
+`index_7.html` (Erols Original), `adapter.js`, `design.css` und `images.json`. Ohne drittes Argument
+wird `bestellung@fcwb-shop.ch` eingesetzt. Danach `git push`, die veröffentlichte Seite aktualisiert sich.
+Der Build braucht Pillow (`pip install Pillow`).
+
+`index_7.html` liegt seit 23.09.2026 im Repo und wurde dabei um zwei Dinge erleichtert, die nicht in ein
+öffentliches Repository gehören: den API-Schlüssel des stillgelegten Firebase-Projekts `fcwb-bestellungen`
+und die sieben privaten Handynummern in `Gg={…}`. Am Build ändert das nichts – `build.py` schneidet den
+Firebase-Block ohnehin heraus und `no_phones` ersetzt den Nummernblock durch `Gg={}`. Nachgewiesen: Ein
+Build aus dieser Vorlage ergibt eine Datei, die sich von der veröffentlichten nur im Zeitstempel `Qg`
+unterscheidet, den `patches.seedversion` bei jedem Lauf neu setzt. Sonst byte-identisch.
