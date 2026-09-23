@@ -134,6 +134,11 @@ Umstellung keine Daten mehr zurück – geprüft wird nur, ob die Datenbank übe
   Seit dem 23.09.2026 greifen `orders_auth` und `teams_auth`; eine Abfrage mit dem öffentlichen Schlüssel
   ohne Anmeldung liefert seither eine leere Liste. Genau diese Abfrage eignet sich als Kontrolle, falls
   jemand die Policies später anfasst.
+- Bei Statuswechseln entsteht eine Mail pro Speichervorgang. Wer viele Positionen einzeln abhakt, löst
+  entsprechend viele Mails aus; das Dropdown «Status für die ganze Bestellung» erzeugt eine einzige.
+  Angedacht und bewusst zurückgestellt: Häkchen pro Position plus «markierte auf Stufe X setzen», damit
+  sich eine Teillieferung in einem Schritt abhaken liesse – ein Speichervorgang, eine Mail. Ein Knopf
+  «jetzt melden» wurde verworfen: Wer ihn vergisst, meldet nie etwas.
 - Supabase Free-Plan pausiert das Projekt nach 7 Tagen ohne Zugriff; im Dashboard wieder starten.
 - Repo, Supabase-Projekt, Domain und Absenderkonto laufen auf Privatpersonen. Bei einem Wechsel im Vorstand
   sollte das dem Verein gehören.
