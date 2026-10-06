@@ -143,6 +143,15 @@ Pro-Plan.
   Seit dem 23.09.2026 greifen `orders_auth` und `teams_auth`; eine Abfrage mit dem öffentlichen Schlüssel
   ohne Anmeldung liefert seither eine leere Liste. Genau diese Abfrage eignet sich als Kontrolle, falls
   jemand die Policies später anfasst.
+- **Die Absicherung vom 23.09.2026 hatte die Tabelle `meta` übersehen.** Sie stammt aus der ersten
+  Supabase-Fassung, wird von der App nicht mehr benutzt, enthält aber weiterhin den Bestellstand vom
+  09.09.2026 mit Spielernamen – und stand bis zum 06.10.2026 für jeden lesbar **und änderbar** offen
+  (Policies `meta_read` / `meta_write` auf der Rolle `public`).
+  Grund: Die Kontrollabfrage war auf `tablename in ('orders','teams')` eingeschränkt, `meta` tauchte im
+  Ergebnis deshalb gar nicht auf. Lehre daraus: **Policies immer über das ganze Schema prüfen**, nie über
+  eine Liste erwarteter Namen. Die Abfrage in `supabase_setup.sql` ist entsprechend korrigiert.
+  Ob der alte Stand in `meta` noch gebraucht wird, ist offen – die Tabelle ist jetzt zu, löschen wäre der
+  nächste Schritt, sobald jemand bestätigt, dass nichts Wichtiges nur dort liegt.
 - Bei Statuswechseln entsteht eine Mail pro Speichervorgang. Wer viele Positionen einzeln abhakt, löst
   entsprechend viele Mails aus; das Dropdown «Status für die ganze Bestellung» erzeugt eine einzige.
   Angedacht und bewusst zurückgestellt: Häkchen pro Position plus «markierte auf Stufe X setzen», damit

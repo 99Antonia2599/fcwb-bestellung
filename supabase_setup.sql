@@ -97,7 +97,37 @@ create policy "heartbeat_read" on public.heartbeat for select to anon, authentic
 -- select tablename, rowsecurity from pg_tables
 --   where schemaname='public' and tablename in ('orders','teams');
 -- select tablename, policyname, roles, cmd from pg_policies
---   where schemaname='public' and tablename in ('orders','teams');
+--   where schemaname='public' order by tablename, policyname;
+--
+-- Bewusst OHNE Einschraenkung auf bestimmte Tabellen. Genau diese Einschraenkung hat
+-- am 23.09.2026 die offene Tabelle `meta` verdeckt: Sie stand nicht in der Liste und
+-- tauchte deshalb im Ergebnis nicht auf. Es darf keine Policy fuer `public` oder
+-- `anon` geben ausser `heartbeat_read`.
 
--- Alte Tabelle aus der ersten Version (eine Zeile mit der ganzen Liste) – bleibt als Reserve stehen.
--- create table if not exists public.meta (id text primary key, json text not null default '[]', updated_at timestamptz default now());
+-- ---------------------------------------------------------------------------
+-- Alte Tabelle `meta` aus der ersten Supabase-Fassung: je eine Zeile für `orders`
+-- und `teams` mit der kompletten Liste als JSON. Die App benutzt sie nicht mehr,
+-- sie enthält aber weiterhin den Stand vom 09.09.2026 – also echte Bestelldaten
+-- mit Spielernamen.
+--
+-- Bis zum 06.10.2026 stand sie offen: Policies `meta_read` und `meta_write` für die
+-- Rolle `public`, lesbar UND änderbar allein mit dem öffentlichen Schlüssel. Die
+-- Absicherung vom 23.09.2026 hatte nur `orders` und `teams` erfasst, weil die
+-- Kontrollabfrage auf diese beiden Namen eingeschränkt war.
+--
+-- Sie bekommt hier dieselbe Prüfung wie die anderen Tabellen. Falls der alte Stand
+-- nicht mehr gebraucht wird, kann die Tabelle später ersatzlos weg – das ist eine
+-- eigene Entscheidung und nicht Teil dieser Datei.
+-- ---------------------------------------------------------------------------
+do $$
+begin
+  if to_regclass('public.meta') is not null then
+    execute 'alter table public.meta enable row level security';
+    execute 'drop policy if exists "meta_read"  on public.meta';
+    execute 'drop policy if exists "meta_write" on public.meta';
+    execute 'drop policy if exists "meta_auth"  on public.meta';
+    execute 'create policy "meta_auth" on public.meta for all to authenticated
+               using      ((auth.jwt() ->> ''email'') = ''bestellung@fcwb-shop.ch'')
+               with check ((auth.jwt() ->> ''email'') = ''bestellung@fcwb-shop.ch'')';
+  end if;
+end $$;
