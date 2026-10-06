@@ -67,13 +67,67 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Weckruf-Tabelle (seit 06.10.2026).
+--
+-- Supabase pausiert Free-Projekte nach 7 Tagen ohne «ausreichende» Aktivität.
+-- Der GitHub-Wecker fragte bisher `orders` ab. Seit der Absicherung bekommt der
+-- öffentliche Schlüssel dort eine leere Liste zurück – und eine Anfrage, die nichts
+-- liefert, zählte offenbar nicht als Nutzung (Warnmail von Supabase am 05.10.2026).
+--
+-- Diese Tabelle hat genau eine Zeile, die jeder lesen darf. Sie enthält nichts ausser
+-- einem Zeitstempel und ist absichtlich uninteressant. Geschrieben wird sie nie – es
+-- gibt keine Schreib-Policy, auch nicht fuer das Vereinskonto. Sie existiert nur,
+-- damit der Weckruf eine echte Antwort bekommt statt einer leeren Liste.
+-- ---------------------------------------------------------------------------
+create table if not exists public.heartbeat (
+  id   int primary key,
+  ping timestamptz not null default now(),
+  constraint heartbeat_nur_eine_zeile check (id = 1)
+);
+insert into public.heartbeat (id) values (1) on conflict (id) do nothing;
+
+alter table public.heartbeat enable row level security;
+drop policy if exists "heartbeat_read" on public.heartbeat;
+create policy "heartbeat_read" on public.heartbeat for select to anon, authenticated using (true);
+
+-- ---------------------------------------------------------------------------
 -- Kontrolle nach dem Ausführen: beide Zeilen müssen rowsecurity = true zeigen,
 -- und es dürfen nur die beiden Policies oben auftauchen, keine mit "anon" oder "public".
 -- ---------------------------------------------------------------------------
 -- select tablename, rowsecurity from pg_tables
 --   where schemaname='public' and tablename in ('orders','teams');
 -- select tablename, policyname, roles, cmd from pg_policies
---   where schemaname='public' and tablename in ('orders','teams');
+--   where schemaname='public' order by tablename, policyname;
+--
+-- Bewusst OHNE Einschraenkung auf bestimmte Tabellen. Genau diese Einschraenkung hat
+-- am 23.09.2026 die offene Tabelle `meta` verdeckt: Sie stand nicht in der Liste und
+-- tauchte deshalb im Ergebnis nicht auf. Es darf keine Policy fuer `public` oder
+-- `anon` geben ausser `heartbeat_read`.
 
--- Alte Tabelle aus der ersten Version (eine Zeile mit der ganzen Liste) – bleibt als Reserve stehen.
--- create table if not exists public.meta (id text primary key, json text not null default '[]', updated_at timestamptz default now());
+-- ---------------------------------------------------------------------------
+-- Alte Tabelle `meta` aus der ersten Supabase-Fassung: je eine Zeile für `orders`
+-- und `teams` mit der kompletten Liste als JSON. Die App benutzt sie nicht mehr,
+-- sie enthält aber weiterhin den Stand vom 09.09.2026 – also echte Bestelldaten
+-- mit Spielernamen.
+--
+-- Bis zum 06.10.2026 stand sie offen: Policies `meta_read` und `meta_write` für die
+-- Rolle `public`, lesbar UND änderbar allein mit dem öffentlichen Schlüssel. Die
+-- Absicherung vom 23.09.2026 hatte nur `orders` und `teams` erfasst, weil die
+-- Kontrollabfrage auf diese beiden Namen eingeschränkt war.
+--
+-- Sie bekommt hier dieselbe Prüfung wie die anderen Tabellen. Falls der alte Stand
+-- nicht mehr gebraucht wird, kann die Tabelle später ersatzlos weg – das ist eine
+-- eigene Entscheidung und nicht Teil dieser Datei.
+-- ---------------------------------------------------------------------------
+do $$
+begin
+  if to_regclass('public.meta') is not null then
+    execute 'alter table public.meta enable row level security';
+    execute 'drop policy if exists "meta_read"  on public.meta';
+    execute 'drop policy if exists "meta_write" on public.meta';
+    execute 'drop policy if exists "meta_auth"  on public.meta';
+    execute 'create policy "meta_auth" on public.meta for all to authenticated
+               using      ((auth.jwt() ->> ''email'') = ''bestellung@fcwb-shop.ch'')
+               with check ((auth.jwt() ->> ''email'') = ''bestellung@fcwb-shop.ch'')';
+  end if;
+end $$;
