@@ -67,6 +67,30 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Weckruf-Tabelle (seit 06.10.2026).
+--
+-- Supabase pausiert Free-Projekte nach 7 Tagen ohne «ausreichende» Aktivität.
+-- Der GitHub-Wecker fragte bisher `orders` ab. Seit der Absicherung bekommt der
+-- öffentliche Schlüssel dort eine leere Liste zurück – und eine Anfrage, die nichts
+-- liefert, zählte offenbar nicht als Nutzung (Warnmail von Supabase am 05.10.2026).
+--
+-- Diese Tabelle hat genau eine Zeile, die jeder lesen darf. Sie enthält nichts ausser
+-- einem Zeitstempel und ist absichtlich uninteressant. Geschrieben wird sie nie – es
+-- gibt keine Schreib-Policy, auch nicht fuer das Vereinskonto. Sie existiert nur,
+-- damit der Weckruf eine echte Antwort bekommt statt einer leeren Liste.
+-- ---------------------------------------------------------------------------
+create table if not exists public.heartbeat (
+  id   int primary key,
+  ping timestamptz not null default now(),
+  constraint heartbeat_nur_eine_zeile check (id = 1)
+);
+insert into public.heartbeat (id) values (1) on conflict (id) do nothing;
+
+alter table public.heartbeat enable row level security;
+drop policy if exists "heartbeat_read" on public.heartbeat;
+create policy "heartbeat_read" on public.heartbeat for select to anon, authenticated using (true);
+
+-- ---------------------------------------------------------------------------
 -- Kontrolle nach dem Ausführen: beide Zeilen müssen rowsecurity = true zeigen,
 -- und es dürfen nur die beiden Policies oben auftauchen, keine mit "anon" oder "public".
 -- ---------------------------------------------------------------------------

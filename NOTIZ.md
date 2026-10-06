@@ -118,10 +118,22 @@ Besser wäre mittelfristig ein Vereins-Mailkonto als Absender statt eines privat
 gesendeten Mails im Ordner «Gesendet» von Erols privatem Gmail mit.
 
 ## Supabase-Wecker
-GitHub Action `.github/workflows/supabase-wecker.yml` fragt alle 2 Tage die Datenbank an (gegen die 7-Tage-Pause
-im Free-Plan) und committet sein Laufdatum (gegen die 60-Tage-Abschaltung von GitHub-Zeitplänen). Bei Fehlschlag
-mailt GitHub die Repo-Inhaberin. Die Anfrage läuft mit dem öffentlichen Schlüssel und bekommt seit der
-Umstellung keine Daten mehr zurück – geprüft wird nur, ob die Datenbank überhaupt antwortet.
+GitHub Action `.github/workflows/supabase-wecker.yml` fragt **täglich** die Datenbank an (gegen die
+7-Tage-Pause im Free-Plan) und committet sein Laufdatum (gegen die 60-Tage-Abschaltung von
+GitHub-Zeitplänen). Bei Fehlschlag mailt GitHub die Repo-Inhaberin.
+
+Am 05.10.2026 kam trotzdem eine Pausierungs-Warnung von Supabase, obwohl der Wecker nachweislich lief und
+`200` zurückbekam. Vermutung: Supabase verlangt «ausreichende» Aktivität, und eine Anfrage alle zwei Tage,
+die wegen der Policies eine **leere Liste** liefert, zählt nicht. Daraufhin zwei Änderungen: täglich statt
+alle zwei Tage, und die Anfrage liest die Tabelle `heartbeat`, die eine echte Zeile zurückgibt.
+
+Der Weckruf prüft seither nicht nur den HTTP-Code, sondern auch, dass die Zeile wirklich ankommt – sonst
+fiele es nicht auf, wenn die Leseregel auf `heartbeat` verschwindet. Das Eintragen des Laufdatums läuft
+auch bei Fehlschlag, damit eine längere Störung nicht zusätzlich den GitHub-Zeitplan abwürgt.
+
+Ob das reicht, weiss man erst nach ein paar Wochen ohne weitere Warnmail. Falls doch pausiert wird: im
+Dashboard mit einem Klick wieder starten, die Daten bleiben 90 Tage erhalten. Dauerhaft löst das nur der
+Pro-Plan.
 
 ## Offen / bekannt
 - Der öffentliche Supabase-Schlüssel stand von Anfang an in der Seite und in der Git-Historie. Das ist so
