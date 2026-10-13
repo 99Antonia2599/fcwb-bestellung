@@ -1,17 +1,20 @@
 # Hält das Supabase-Free-Projekt wach. Supabase pausiert Projekte nach 7 Tagen ohne
-# "ausreichende" Aktivität; eine einzelne Leseanfrage alle zwei Tage reichte dafür
-# nicht (Warnmail vom 05.10.2026). Deshalb täglich statt alle zwei Tage, und die
-# Anfrage liest jetzt die Tabelle `heartbeat`, die eine Zeile zurückgibt – die
-# Tabellen `orders` und `teams` liefern dem öffentlichen Schlüssel seit der
-# Absicherung nichts mehr, und eine leere Antwort zählt womöglich nicht als Nutzung.
+# "ausreichende" Aktivität und nennt die Schwelle nicht.
+#
+# Was bereits nicht gereicht hat:
+#   - alle 2 Tage lesen, Antwort leer    -> Warnung am 05.10.2026
+#   - täglich lesen, Antwort mit Inhalt  -> Warnung am 13.10.2026, obwohl jeder
+#     Lauf nachweislich HTTP 200 mit einer echten Zeile bekam
+# Lesen zählt also offenbar nicht. Deshalb jetzt: dreimal täglich wirklich SCHREIBEN,
+# über die Funktion touch_heartbeat, die den Zeitstempel der einen heartbeat-Zeile setzt.
 #
 # Der zweite Schritt committet sein Laufdatum, damit GitHub den Zeitplan nicht nach
-# 60 Tagen Inaktivität abschaltet. Er läuft auch, wenn die Datenbank nicht antwortet –
-# sonst würde eine längere Störung zusätzlich den Zeitplan sterben lassen.
+# 60 Tagen Inaktivität abschaltet. Er läuft auch bei Fehlschlag – sonst würde eine
+# längere Störung zusätzlich den Zeitplan abwürgen.
 name: Supabase Wecker
 on:
   schedule:
-    - cron: "17 6 * * *"   # täglich um 06:17 UTC
+    - cron: "17 6,12,18 * * *"   # dreimal täglich, 06:17 / 12:17 / 18:17 UTC
   workflow_dispatch:
 permissions:
   contents: write
@@ -20,34 +23,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Datenbank anfragen
+      - name: Datenbank beschreiben
         id: ping
         run: |
           KEY="sb_publishable_b9EbsvwSs8HPvnBw4_KvTw_cJ_CM3FK"
-          resp=$(curl -s -w $'\n%{http_code}' \
+          resp=$(curl -s -w $'\n%{http_code}' -X POST \
             -H "apikey: $KEY" \
             -H "Authorization: Bearer $KEY" \
-            "https://zsscsphixrupplaihhxo.supabase.co/rest/v1/heartbeat?select=ping&limit=1")
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "https://zsscsphixrupplaihhxo.supabase.co/rest/v1/rpc/touch_heartbeat")
           code=$(printf '%s' "$resp" | tail -n1)
           body=$(printf '%s' "$resp" | sed '$d')
-          echo "Antwort: $code  Inhalt: $body"
-          # Es genügt nicht, dass irgendetwas antwortet: Die Zeile muss auch
-          # wirklich zurückkommen. Sonst faellt es nicht auf, wenn die Leseregel
-          # auf heartbeat verschwindet und der Weckruf ins Leere laeuft.
+          heute=$(date -u +%Y-%m-%d)
+          echo "Antwort: $code  Zeitstempel: $body"
           if [ "$code" != "200" ]; then
             echo "Datenbank antwortet nicht (HTTP $code)."; exit 1
           fi
+          # Der zurueckgegebene Zeitstempel muss von heute sein. Damit ist bewiesen,
+          # dass wirklich geschrieben wurde - nicht nur, dass irgendetwas geantwortet hat.
           case "$body" in
-            *ping*) ;;
-            *) echo "Leere Antwort - Leseregel auf public.heartbeat pruefen."; exit 1 ;;
+            *"$heute"*) ;;
+            *) echo "Zeitstempel nicht von heute - der Schreibvorgang hat nicht gegriffen."; exit 1 ;;
           esac
       - name: Laufdatum eintragen (hält den Zeitplan aktiv)
         if: always()
         run: |
-          if [ "${{ steps.ping.outcome }}" = "success" ]; then S="erreichbar"; else S="NICHT erreichbar"; fi
+          if [ "${{ steps.ping.outcome }}" = "success" ]; then S="beschrieben"; else S="NICHT erreichbar"; fi
           date -u +"%Y-%m-%d %H:%M UTC – Datenbank $S" > .github/wecker-letzter-lauf.txt
           git config user.name "fcwb-wecker"
           git config user.email "wecker@users.noreply.github.com"
           git add .github/wecker-letzter-lauf.txt
           git commit -m "Wecker: Datenbank angefragt" || exit 0
+          git pull --rebase --autostash -q || true
           git push

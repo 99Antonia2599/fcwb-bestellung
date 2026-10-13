@@ -90,6 +90,31 @@ alter table public.heartbeat enable row level security;
 drop policy if exists "heartbeat_read" on public.heartbeat;
 create policy "heartbeat_read" on public.heartbeat for select to anon, authenticated using (true);
 
+-- Schreibender Weckruf (seit 13.10.2026).
+--
+-- Eine tägliche LESE-Anfrage mit echter Antwort hat nicht gereicht: Supabase hat am
+-- 05.10. und erneut am 13.10. eine Pausierungs-Warnung geschickt, obwohl der Wecker
+-- nachweislich jeden Tag lief und HTTP 200 mit einer Zeile bekam. Lesen zählt also
+-- offenbar nicht. Nächster Versuch: wirklich schreiben.
+--
+-- Die Funktion setzt nur den Zeitstempel der einen heartbeat-Zeile. `anon` bekommt
+-- dadurch KEIN Schreibrecht auf irgendeine Tabelle – nur das Recht, diese eine
+-- Funktion aufzurufen. Mehr als diesen Zeitstempel kann sie nicht anfassen.
+-- `security definer` mit festem search_path, damit der Aufrufer nichts unterschieben kann.
+create or replace function public.touch_heartbeat()
+returns timestamptz
+language sql
+security definer
+set search_path = public
+as $fn$
+  update public.heartbeat set ping = now() where id = 1 returning ping;
+$fn$;
+
+-- Postgres vergibt das Ausfuehrungsrecht beim Anlegen automatisch an PUBLIC.
+-- Das zuerst wegnehmen und dann gezielt vergeben.
+revoke all on function public.touch_heartbeat() from public;
+grant execute on function public.touch_heartbeat() to anon, authenticated;
+
 -- ---------------------------------------------------------------------------
 -- Kontrolle nach dem Ausführen: beide Zeilen müssen rowsecurity = true zeigen,
 -- und es dürfen nur die beiden Policies oben auftauchen, keine mit "anon" oder "public".
