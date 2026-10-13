@@ -118,22 +118,37 @@ Besser wäre mittelfristig ein Vereins-Mailkonto als Absender statt eines privat
 gesendeten Mails im Ordner «Gesendet» von Erols privatem Gmail mit.
 
 ## Supabase-Wecker
-GitHub Action `.github/workflows/supabase-wecker.yml` fragt **täglich** die Datenbank an (gegen die
-7-Tage-Pause im Free-Plan) und committet sein Laufdatum (gegen die 60-Tage-Abschaltung von
-GitHub-Zeitplänen). Bei Fehlschlag mailt GitHub die Repo-Inhaberin.
+GitHub Action `.github/workflows/supabase-wecker.yml` hält das Free-Projekt wach (gegen die 7-Tage-Pause)
+und committet sein Laufdatum (gegen die 60-Tage-Abschaltung von GitHub-Zeitplänen). Bei Fehlschlag mailt
+GitHub die Repo-Inhaberin.
 
-Am 05.10.2026 kam trotzdem eine Pausierungs-Warnung von Supabase, obwohl der Wecker nachweislich lief und
-`200` zurückbekam. Vermutung: Supabase verlangt «ausreichende» Aktivität, und eine Anfrage alle zwei Tage,
-die wegen der Policies eine **leere Liste** liefert, zählt nicht. Daraufhin zwei Änderungen: täglich statt
-alle zwei Tage, und die Anfrage liest die Tabelle `heartbeat`, die eine echte Zeile zurückgibt.
+**Was schon nicht gereicht hat** – Supabase nennt die Schwelle nicht, also wird sie durch Versuche ermittelt:
 
-Der Weckruf prüft seither nicht nur den HTTP-Code, sondern auch, dass die Zeile wirklich ankommt – sonst
-fiele es nicht auf, wenn die Leseregel auf `heartbeat` verschwindet. Das Eintragen des Laufdatums läuft
-auch bei Fehlschlag, damit eine längere Störung nicht zusätzlich den GitHub-Zeitplan abwürgt.
+| Stand | Weckruf | Ergebnis |
+|---|---|---|
+| bis 05.10.2026 | alle 2 Tage lesen, Antwort leer (`[]` wegen RLS) | Pausierungs-Warnung am 05.10. |
+| 06.–13.10.2026 | täglich lesen, Antwort mit echter Zeile | Pausierungs-Warnung am 13.10. |
+| seit 13.10.2026 | dreimal täglich **schreiben** über `touch_heartbeat()` | offen |
 
-Ob das reicht, weiss man erst nach ein paar Wochen ohne weitere Warnmail. Falls doch pausiert wird: im
-Dashboard mit einem Klick wieder starten, die Daten bleiben 90 Tage erhalten. Dauerhaft löst das nur der
-Pro-Plan.
+In der zweiten Phase lief der Wecker nachweislich jeden Tag und bekam jedes Mal HTTP 200 mit Inhalt.
+**Lesen zählt also nicht**, egal wie oft und egal ob etwas zurückkommt.
+
+Der aktuelle Weckruf ruft die Funktion `public.touch_heartbeat()` auf, die den Zeitstempel der einen Zeile
+in `heartbeat` neu setzt. Die Rolle `anon` bekommt dadurch **kein** Schreibrecht auf eine Tabelle, nur das
+Recht, diese eine Funktion aufzurufen; mehr als diesen Zeitstempel kann sie nicht verändern. Der Lauf prüft
+anschliessend, dass der zurückgegebene Zeitstempel von heute ist – damit ist belegt, dass wirklich
+geschrieben wurde und nicht bloss irgendetwas geantwortet hat.
+
+Das Eintragen des Laufdatums läuft auch bei Fehlschlag, damit eine längere Störung nicht zusätzlich den
+GitHub-Zeitplan abwürgt. In `.github/wecker-letzter-lauf.txt` steht seither «beschrieben» oder
+«NICHT erreichbar».
+
+**Falls auch das nicht reicht:** Dann ist der Free-Plan für ein Werkzeug, das nur schubweise benutzt wird,
+schlicht nicht gedacht. Übrig bleiben Pro-Plan (rund 25 USD/Monat, vom Vorstand abgelehnt) oder das
+Pausieren hinnehmen – im Dashboard ist es ein Klick, die Daten bleiben 90 Tage erhalten. Für den Fall wäre
+eine ehrliche Fehlermeldung in der Anmeldemaske sinnvoll («Die Datenbank schläft, bitte bei Antonia
+melden») statt des heutigen «Keine Verbindung. Internet prüfen», das die Schuld beim Benutzer sucht.
+Ebenfalls offen: eine Supportanfrage bei Supabase, was überhaupt als Aktivität zählt.
 
 ## Offen / bekannt
 - Der öffentliche Supabase-Schlüssel stand von Anfang an in der Seite und in der Git-Historie. Das ist so
