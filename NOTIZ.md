@@ -158,6 +158,15 @@ Ebenfalls offen: eine Supportanfrage bei Supabase, was überhaupt als Aktivität
   Seit dem 23.09.2026 greifen `orders_auth` und `teams_auth`; eine Abfrage mit dem öffentlichen Schlüssel
   ohne Anmeldung liefert seither eine leere Liste. Genau diese Abfrage eignet sich als Kontrolle, falls
   jemand die Policies später anfasst.
+- **Zugriffsrechte stehen seit 21.10.2026 ausdrücklich in `supabase_setup.sql`.** Supabase vergibt sie für
+  neu angelegte Tabellen ab dem 30.10.2026 nicht mehr automatisch. Die bestehenden Tabellen behalten die
+  ihren, die laufende App ist also unberührt – die Datei hätte aber auf einem frischen Projekt Tabellen mit
+  korrekten Policies und ohne API-Zugriff erzeugt, und der Fehler «permission denied» hätte niemanden auf
+  eine fehlende Grant-Zeile gebracht.
+  Dabei bekommt `anon` auf `orders`, `teams` und `meta` bewusst gar nichts mehr: zwei Riegel statt einem,
+  denn ohne Recht scheitert er schon vor der Policy. **Wenn dieser Teil auf der laufenden Datenbank
+  ausgeführt wird, ändert sich die Kontrollantwort** – statt `200 []` kommt dann ein Fehler «permission
+  denied». Das ist der deutlichere Beweis, nur eben ein anderer als der bisher notierte.
 - **Die Absicherung vom 23.09.2026 hatte die Tabelle `meta` übersehen.** Sie stammt aus der ersten
   Supabase-Fassung, wird von der App nicht mehr benutzt, enthält aber weiterhin den Bestellstand vom
   09.09.2026 mit Spielernamen – und stand bis zum 06.10.2026 für jeden lesbar **und änderbar** offen

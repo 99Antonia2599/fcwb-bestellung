@@ -50,6 +50,27 @@ create policy "teams_auth" on public.teams for all to authenticated
   using      ((auth.jwt() ->> 'email') = 'bestellung@fcwb-shop.ch')
   with check ((auth.jwt() ->> 'email') = 'bestellung@fcwb-shop.ch');
 
+-- ---------------------------------------------------------------------------
+-- Zugriffsrechte, ausdrücklich.
+--
+-- Supabase hat Rechte auf neue Tabellen im Schema `public` bisher automatisch
+-- vergeben; ab 30.10.2026 tut es das nicht mehr. Bestehende Tabellen behalten die
+-- ihren, diese Datei muss aber auch auf einem frischen Projekt funktionieren –
+-- sonst entstehen Tabellen mit korrekten Policies und ohne API-Zugriff, und die
+-- App läuft gegen «permission denied», ohne dass jemand die Ursache sieht.
+--
+-- `anon` bekommt auf `orders` und `teams` bewusst NICHTS. Die Policies oben weisen
+-- ihn ohnehin ab; ohne Recht scheitert er eine Ebene früher. Das sind zwei Riegel
+-- statt einem: Selbst eine später versehentlich zu grosszügige Policy bliebe wirkungslos.
+--
+-- Nebenwirkung, damit niemand erschrickt: Eine Abfrage als `anon` liefert danach
+-- nicht mehr `200 []`, sondern einen Fehler «permission denied». Das ist der
+-- deutlichere Beweis, dass die Tabelle zu ist.
+-- ---------------------------------------------------------------------------
+revoke all on public.orders, public.teams from anon;
+grant select, insert, update, delete on public.orders, public.teams to authenticated;
+grant all on public.orders, public.teams to service_role;
+
 -- Live-Sync (prüft dieselben Policies).
 -- "add table" bricht mit Fehler ab, wenn die Tabelle schon in der Publikation ist –
 -- und weil der SQL-Editor alles in einer Transaktion ausführt, wäre damit auch die
@@ -89,6 +110,10 @@ insert into public.heartbeat (id) values (1) on conflict (id) do nothing;
 alter table public.heartbeat enable row level security;
 drop policy if exists "heartbeat_read" on public.heartbeat;
 create policy "heartbeat_read" on public.heartbeat for select to anon, authenticated using (true);
+
+-- Hier ist das Leserecht für `anon` gewollt: Genau darauf setzt der Weckruf auf.
+grant select on public.heartbeat to anon, authenticated;
+grant all    on public.heartbeat to service_role;
 
 -- Schreibender Weckruf (seit 13.10.2026).
 --
@@ -154,5 +179,8 @@ begin
     execute 'create policy "meta_auth" on public.meta for all to authenticated
                using      ((auth.jwt() ->> ''email'') = ''bestellung@fcwb-shop.ch'')
                with check ((auth.jwt() ->> ''email'') = ''bestellung@fcwb-shop.ch'')';
+    execute 'revoke all on public.meta from anon';
+    execute 'grant select, insert, update, delete on public.meta to authenticated';
+    execute 'grant all on public.meta to service_role';
   end if;
 end $$;
